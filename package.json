@@ -10,6 +10,8 @@
     "nuxt.config.ts"
   ],
   "scripts": {
+    "dev": "nuxi dev .playground",
+    "build": "nuxt build .playground",
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build",
     "test:ct": "cypress run --component",

@@ -1,0 +1,236 @@
+<template>
+  <form class="card-form" @submit.prevent="handleSubmit">
+    <div class="form-header">
+      <h2>{{ isEditing ? labels.editGroup : labels.createGroup }}</h2>
+      <button type="button" class="close-btn" @click="handleClose">
+        <X />
+      </button>
+    </div>
+
+    <div class="form-group">
+      <label for="group-name" class="form-label">{{ labels.groupName }}</label>
+      <div class="name-icon-row">
+        <div class="name-col">
+          <input
+            id="group-name"
+            v-model="form.name"
+            type="text"
+            class="form-input"
+            :class="{ error: nameError || props.apiError }"
+            :placeholder="labels.enterGroupName"
+            required
+          />
+          <div v-if="nameError" class="error-text">{{ labels.groupNameRequired }}</div>
+          <div v-if="props.apiError" class="error-text">{{ props.apiError }}</div>
+        </div>
+        <div class="icon-col">
+          <button
+            type="button"
+            class="icon-trigger"
+            :aria-expanded="showIconPicker"
+            :aria-label="labels.chooseIcon"
+            @click="showIconPicker = !showIconPicker"
+          >
+            <component
+              :is="selectedIconComponent"
+              v-if="selectedIconComponent"
+              class="icon-trigger__icon"
+            />
+            <ImagePlus v-else class="icon-trigger__icon" />
+          </button>
+        </div>
+      </div>
+
+      <div v-if="showIconPicker" class="icon-popover">
+        <IconPicker v-model="form.icon" @update:model-value="onIconSelected" />
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label for="group-description" class="form-label">{{ labels.groupDescription }}</label>
+      <textarea
+        id="group-description"
+        v-model="form.description"
+        class="form-textarea"
+        :class="{ error: descriptionError }"
+        :placeholder="labels.typeGroupDescription"
+        rows="5"
+        required
+      />
+      <div v-if="descriptionError" class="error-text">
+        {{ labels.groupDescriptionRequired }}
+      </div>
+    </div>
+
+    <div class="form-actions">
+      <button type="button" class="btn btn-secondary" @click="handleClose">
+        {{ labels.cancel }}
+      </button>
+      <button type="submit" class="btn btn-primary" :disabled="props.isSubmitting">
+        <span v-if="props.isSubmitting">{{ isEditing ? labels.updating : labels.creating }}</span>
+        <span v-else>{{ isEditing ? labels.updateGroup : labels.createGroup }}</span>
+      </button>
+    </div>
+  </form>
+</template>
+
+<script setup>
+import { ref, computed, watch } from 'vue';
+import IconPicker from './IconPicker.vue';
+import * as lucideIcons from 'lucide-vue-next';
+import { ImagePlus, X } from 'lucide-vue-next';
+
+const props = defineProps({
+  editingItem: {
+    type: Object,
+    default: null
+  },
+  apiError: {
+    type: String,
+    default: ''
+  },
+  isSubmitting: {
+    type: Boolean,
+    default: false
+  },
+  labels: {
+    type: Object,
+    default: () => ({
+      editGroup: 'Edit Group',
+      createGroup: 'Create Group',
+      groupName: 'Group Name',
+      enterGroupName: 'Enter group name',
+      groupNameRequired: 'Group name is required.',
+      chooseIcon: 'Choose icon',
+      groupDescription: 'Group Description',
+      typeGroupDescription: 'Type group description here...',
+      groupDescriptionRequired: 'Group description is required.',
+      cancel: 'Cancel',
+      updating: 'Updating...',
+      creating: 'Creating...',
+      updateGroup: 'Update Group'
+    })
+  }
+});
+
+const emit = defineEmits(['created', 'updated', 'close']);
+
+const form = ref({
+  name: '',
+  description: '',
+  icon: ''
+});
+
+const nameError = ref(false);
+const descriptionError = ref(false);
+const showIconPicker = ref(false);
+
+const selectedIconComponent = computed(() => {
+  const key = form.value.icon;
+  if (key && typeof lucideIcons[key] === 'function') {
+    return lucideIcons[key];
+  }
+  return null;
+});
+
+const isEditing = computed(() => !!props.editingItem);
+
+// Populate form when editing
+watch(
+  () => props.editingItem,
+  (newItem) => {
+    if (newItem) {
+      // Extract icon value - could be from icon.content or direct icon value
+      const iconValue = newItem.icon?.content || newItem.icon || '';
+
+      form.value = {
+        name: newItem.name || '',
+        description: newItem.description || '',
+        icon: iconValue
+      };
+    } else {
+      resetForm();
+    }
+  },
+  { immediate: true }
+);
+
+function resetForm() {
+  form.value = { name: '', description: '', icon: '' };
+  nameError.value = false;
+  descriptionError.value = false;
+  showIconPicker.value = false;
+}
+
+function validateForm() {
+  let isValid = true;
+
+  // Reset errors
+  nameError.value = false;
+  descriptionError.value = false;
+
+  // Validate name
+  if (!form.value.name || form.value.name.trim() === '') {
+    nameError.value = true;
+    isValid = false;
+  }
+
+  // Validate description
+  if (!form.value.description || form.value.description.trim() === '') {
+    descriptionError.value = true;
+    isValid = false;
+  }
+
+  return isValid;
+}
+
+function handleSubmit() {
+  if (props.isSubmitting) {
+    return;
+  }
+
+  if (!validateForm()) return;
+
+  const formData = {
+    name: form.value.name.trim(),
+    description: form.value.description.trim()
+  };
+  if (form.value.icon && form.value.icon.trim() !== '') {
+    formData.icon = form.value.icon;
+    formData.icon_type = 'image';
+  }
+
+  if (isEditing.value && props.editingItem) {
+    emit('updated', { id: props.editingItem.id, ...formData });
+    return;
+  }
+
+  emit('created', formData);
+}
+
+function onIconSelected() {
+  showIconPicker.value = false;
+}
+
+function handleClose() {
+  emit('close');
+  resetForm();
+}
+</script>
+
+<style scoped lang="scss">
+@use '../assets/scss/_vars.scss' as *;
+
+.submit-btn {
+  &:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+  }
+}
+
+.error-text {
+  color: #dc2626;
+  font-size: 0.875rem;
+  margin-top: 0.25rem;
+}
+</style>
