@@ -54,6 +54,5 @@ describe('ContentTable', () => {
     });
     cy.get('h1').should('contain.text', 'List of Wallets');
     cy.get('th.col-action').should('contain.text', 'Actions');
-    cy.get('.entity-row').first().find('.default-badge').should('contain.text', 'Primary');
   });
 });

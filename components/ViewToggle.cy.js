@@ -13,15 +13,15 @@ describe('ViewToggle', () => {
   });
 
   it('emits update:modelValue with table when table button clicked', () => {
-    const onUpdate = cy.stub().as('update');
-    cy.mount(ViewToggle, { props: { modelValue: 'cards', onUpdate } });
+    const onUpdateModelValue = cy.stub().as('update');
+    cy.mount(ViewToggle, { props: { modelValue: 'cards', 'onUpdate:modelValue': onUpdateModelValue } });
     cy.get('.toggle-btn').first().click();
     cy.get('@update').should('have.been.calledWith', 'table');
   });
 
   it('emits update:modelValue with cards when cards button clicked', () => {
-    const onUpdate = cy.stub().as('update');
-    cy.mount(ViewToggle, { props: { modelValue: 'table', onUpdate } });
+    const onUpdateModelValue = cy.stub().as('update');
+    cy.mount(ViewToggle, { props: { modelValue: 'table', 'onUpdate:modelValue': onUpdateModelValue } });
     cy.get('.toggle-btn').last().click();
     cy.get('@update').should('have.been.calledWith', 'cards');
   });

@@ -12,8 +12,8 @@ describe('SearchInput', () => {
   });
 
   it('emits update:modelValue on input (debounced)', () => {
-    const onUpdate = cy.stub().as('update');
-    cy.mount(SearchInput, { props: { modelValue: '', debounce: 100, onUpdate } });
+    const onUpdateModelValue = cy.stub().as('update');
+    cy.mount(SearchInput, { props: { modelValue: '', debounce: 100, 'onUpdate:modelValue': onUpdateModelValue } });
     cy.get('.search-input').type('rent');
     cy.wait(150);
     cy.get('@update').should('have.been.calledWith', 'rent');

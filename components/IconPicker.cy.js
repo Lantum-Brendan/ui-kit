@@ -21,16 +21,16 @@ describe('IconPicker', () => {
   });
 
   it('emits update:modelValue when an icon is selected', () => {
-    const onUpdate = cy.stub().as('update');
-    cy.mount(IconPicker, { props: { modelValue: '', onUpdate } });
+    const onUpdateModelValue = cy.stub().as('update');
+    cy.mount(IconPicker, { props: { modelValue: '', 'onUpdate:modelValue': onUpdateModelValue } });
     cy.get('.dropdown-toggle-btn').click();
     cy.get('.icon-btn').first().click();
     cy.get('@update').should('have.been.called');
   });
 
   it('emits empty string when selection is cleared', () => {
-    const onUpdate = cy.stub().as('update');
-    cy.mount(IconPicker, { props: { modelValue: 'Home', onUpdate } });
+    const onUpdateModelValue = cy.stub().as('update');
+    cy.mount(IconPicker, { props: { modelValue: 'Home', 'onUpdate:modelValue': onUpdateModelValue } });
     cy.get('.clear-icon-btn').click();
     cy.get('@update').should('have.been.calledWith', '');
   });

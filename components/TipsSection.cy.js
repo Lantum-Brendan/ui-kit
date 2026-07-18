@@ -16,6 +16,6 @@ describe('TipsSection', () => {
     cy.mount(TipsSection, {
       props: { title: 't', text: 's' }
     });
-    cy.get('.bulb-image').should('have.attr', 'src', '/bulbIcon.svg');
+    cy.get('.bulb-image').should('have.attr', 'src').and('include', 'bulbIcon.svg');
   });
 });

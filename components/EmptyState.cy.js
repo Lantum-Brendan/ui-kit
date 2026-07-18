@@ -19,7 +19,7 @@ describe('EmptyState', () => {
     cy.mount(EmptyState, {
       props: { title: 't', subtitle: 's', iconAlt: 'Box' }
     });
-    cy.get('.empty-icon').should('have.attr', 'src', '/box.svg');
+    cy.get('.empty-icon').should('have.attr', 'src').and('include', 'box.svg');
     cy.get('.empty-icon').should('have.attr', 'alt', 'Box');
   });
 

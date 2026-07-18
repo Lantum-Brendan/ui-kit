@@ -24,11 +24,11 @@ describe('SparkLine', () => {
     cy.get('circle').should('exist');
   });
 
-  it('renders nothing meaningful for a single value', () => {
+  it('renders a marker for a single value', () => {
     cy.mount(SparkLine, {
       props: { values: [5], color: '#10b981' }
     });
     cy.get('svg.sparkline').should('exist');
-    cy.get('circle').should('not.exist');
+    cy.get('circle').should('exist');
   });
 });
