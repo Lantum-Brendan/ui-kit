@@ -188,6 +188,13 @@ export const demos: Record<string, DemoConfig> = {
   },
   AuthDivider: {},
   Logo: {},
+  GoogleIcon: {},
+  SettingsDisplay: {
+    props: {
+      isDark: false,
+      labels: { light: 'Light', dark: 'Dark', mode: 'Mode' }
+    }
+  },
   LoadingSkeleton: {},
   IconPicker: {},
   HamburgerMenu: {},
