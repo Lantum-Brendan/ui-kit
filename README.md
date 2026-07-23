@@ -47,7 +47,7 @@ Because the kit's SCSS variables point at the custom properties, an override flo
 
 Primitives (extracted from the app):
 
-- `TButton`, `TCard`, `TTabs`, `TDropdown`, `TDropdownItem`, `TInfoButton`
+- `TButton`, `TCard`, `TTabs`, `TDropdown`, `TDropdownItem`, `TInfoButton`, `TTopCard`, `ThemeToggleButton`
 
 Layout (generic, authored here; the app will adopt them over time):
 
@@ -55,7 +55,7 @@ Layout (generic, authored here; the app will adopt them over time):
 
 All are free of app composables, routing, and i18n.
 
-Deferred (need decoupling before they can move): components bound to app state, routing, theme, or translation (for example `TNavbar`, `TSidebar`, `TAvatar`, `TTopCard`, `ThemeToggleButton`). These move once their i18n strings and behaviour are lifted into props or peer composables.
+Deferred (need decoupling before they can move): components bound to app state, routing, theme, or translation (for example `TNavbar`, `TSidebar`, `TAvatar`). These move once their i18n strings and behaviour are lifted into props or peer composables.
 
 ## Develop
 
