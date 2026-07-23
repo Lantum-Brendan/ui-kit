@@ -30,6 +30,8 @@
   --color-border: #e5e7eb;
   --color-input-bg: #f9fafb;
   --color-accent: #ff9f43;
+  --color-accent-rgb: 255, 159, 67;
+  --color-accent-dark: #b45309;
   --color-warning: #f59e0b;
   --color-warning-rgb: 245, 158, 11;
   --color-warning-bg: #fef3cd;
@@ -92,6 +94,8 @@
   --color-border: #374151;
   --color-input-bg: #111827;
   --color-accent: #f59e0b;
+  --color-accent-rgb: 245, 158, 11;
+  --color-accent-dark: #d97706;
   --color-warning: #fbbf24;
   --color-warning-rgb: 251, 191, 36;
   --color-warning-bg: #78350f;

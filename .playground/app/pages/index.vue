@@ -1,16 +1,9 @@
 <template>
   <div class="dashboard">
-    <aside class="sidebar">
+    <TPanel variant="flat" :padding="0" class="sidebar">
       <div class="sidebar__head">
-        <button class="sidebar__brand" :class="{ 'is-active': !selected }" @click="selected = ''">
-          ui-kit
-        </button>
-        <input
-          v-model="search"
-          class="sidebar__search"
-          type="search"
-          placeholder="Filter components…"
-        />
+        <TButton text="ui-kit" variant="text" :full-width="false" :class="{ 'is-active': !selected }" @click="selected = ''" />
+        <SearchInput v-model="search" placeholder="Filter components…" :debounce="0" />
       </div>
       <nav class="sidebar__list">
         <template v-if="!search">
@@ -21,38 +14,38 @@
               <span class="sidebar__group-count">{{ group.items.length }}</span>
             </button>
             <div v-show="open.has(group.label)" class="sidebar__group-items">
-              <button
+              <TButton
                 v-for="name in group.items"
                 :key="name"
-                class="sidebar__item"
+                :text="name"
+                variant="text"
+                :full-width="false"
                 :class="{ 'is-active': name === selected }"
                 @click="selected = name"
-              >
-                {{ name }}
-              </button>
+              />
             </div>
           </div>
         </template>
 
         <template v-else>
-          <button
+          <TButton
             v-for="c in filtered"
             :key="c.name"
-            class="sidebar__item"
+            :text="c.name"
+            variant="text"
+            :full-width="false"
             :class="{ 'is-active': c.name === selected }"
             @click="selected = c.name"
-          >
-            {{ c.name }}
-          </button>
+          />
           <p v-if="filtered.length === 0" class="sidebar__empty">No matches</p>
         </template>
       </nav>
-    </aside>
+    </TPanel>
 
     <main class="content">
       <header v-if="selected" class="content__bar">
         <div class="content__bar-left">
-          <button class="content__back" @click="selected = ''">← Usage</button>
+          <TButton text="← Usage" variant="outline" size="small" :full-width="false" @click="selected = ''" />
           <h2>{{ selected }}</h2>
         </div>
         <span class="content__count">{{ components.length }} components</span>
@@ -111,69 +104,20 @@ const filtered = computed(() => {
 }
 
 .sidebar {
-  border-right: 1px solid #1f5e42;
-  background: #047844;
-  background: linear-gradient(180deg, #05824c 0%, #047844 60%, #036a3c 100%);
+  border-right: 1px solid var(--color-border-light);
   display: flex;
   flex-direction: column;
   height: 100vh;
   position: sticky;
   top: 0;
-  color: #eafaf2;
 }
 
 .sidebar__head {
   padding: 1.25rem 1rem;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+  border-bottom: 1px solid var(--color-border-light);
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
-}
-
-.sidebar__brand {
-  text-align: left;
-  border: none;
-  background: transparent;
-  padding: 0.4rem 0.5rem;
-  border-radius: 0.5rem;
-  font-size: 1.1rem;
-  font-weight: 700;
-  margin: 0;
-  color: #ffffff;
-  letter-spacing: 0.02em;
-  cursor: pointer;
-  font-family: inherit;
-  transition: background 0.15s ease, color 0.15s ease;
-}
-
-.sidebar__brand:hover {
-  background: rgba(122, 196, 165, 0.22);
-}
-
-.sidebar__brand.is-active {
-  background: #a7e8c9;
-  color: #06402a;
-}
-
-.sidebar__search {
-  width: 100%;
-  padding: 0.5rem 0.75rem;
-  border: 1px solid rgba(255, 255, 255, 0.25);
-  border-radius: 0.5rem;
-  font-size: 0.875rem;
-  background: rgba(255, 255, 255, 0.14);
-  color: #ffffff;
-  font-family: inherit;
-}
-
-.sidebar__search::placeholder {
-  color: rgba(234, 250, 242, 0.7);
-}
-
-.sidebar__search:focus {
-  outline: none;
-  border-color: #7ac4a5;
-  background: rgba(255, 255, 255, 0.2);
 }
 
 .sidebar__list {
@@ -203,19 +147,19 @@ const filtered = computed(() => {
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.04em;
-  color: #a7e8c9;
+  color: var(--color-text-muted);
   cursor: pointer;
   font-family: inherit;
 }
 
 .sidebar__group-head:hover {
-  background: rgba(122, 196, 165, 0.18);
-  color: #ffffff;
+  background: var(--color-hover-overlay);
+  color: var(--color-text-primary);
 }
 
 .sidebar__group-head.is-flash {
-  background: #a7e8c9;
-  color: #06402a;
+  background: var(--color-primary-lighter);
+  color: var(--color-primary-dark);
   transition: background 0.2s ease;
 }
 
@@ -231,8 +175,8 @@ const filtered = computed(() => {
 
 .sidebar__group-count {
   margin-left: auto;
-  background: rgba(255, 255, 255, 0.16);
-  color: #eafaf2;
+  background: var(--color-bg-gray);
+  color: var(--color-text-muted);
   font-size: 0.68rem;
   font-weight: 600;
   padding: 0.05rem 0.4rem;
@@ -246,41 +190,17 @@ const filtered = computed(() => {
   padding: 2px 0 6px;
 }
 
-.sidebar__item {
-  text-align: left;
-  border: none;
-  background: transparent;
-  padding: 0.5rem 0.75rem;
-  border-radius: 0.5rem;
-  font-size: 0.875rem;
-  color: #d7f2e6;
-  cursor: pointer;
-  font-family: inherit;
-  transition: background 0.15s ease, color 0.15s ease;
-}
-
-.sidebar__item:hover {
-  background: rgba(122, 196, 165, 0.22);
-  color: #ffffff;
-}
-
-.sidebar__item.is-active {
-  background: #a7e8c9;
-  color: #06402a;
-  font-weight: 600;
-}
-
 .sidebar__empty {
   padding: 0.75rem;
   font-size: 0.875rem;
-  color: rgba(234, 250, 242, 0.7);
+  color: var(--color-text-muted);
 }
 
 .content {
   display: flex;
   flex-direction: column;
   min-width: 0;
-  background: #f1f8f4;
+  background: var(--color-primary-light);
 }
 
 .content__bar {
@@ -288,8 +208,8 @@ const filtered = computed(() => {
   align-items: baseline;
   justify-content: space-between;
   padding: 1.25rem 2rem;
-  border-bottom: 1px solid #d4e9df;
-  background: #ffffff;
+  border-bottom: 1px solid var(--color-border-light);
+  background: var(--color-bg-white);
 }
 
 .content__bar-left {
@@ -298,31 +218,15 @@ const filtered = computed(() => {
   gap: 1rem;
 }
 
-.content__back {
-  border: 1px solid #047844;
-  background: transparent;
-  color: #047844;
-  border-radius: 0.45rem;
-  padding: 0.3rem 0.7rem;
-  font-size: 0.8rem;
-  font-weight: 600;
-  cursor: pointer;
-  font-family: inherit;
-}
-
-.content__back:hover {
-  background: #f1f8f4;
-}
-
 .content__bar h2 {
   margin: 0;
   font-size: 1.25rem;
   font-weight: 700;
-  color: #047844;
+  color: var(--color-primary);
 }
 
 .content__count {
   font-size: 0.8rem;
-  color: #4a7a64;
+  color: var(--color-text-muted);
 }
 </style>

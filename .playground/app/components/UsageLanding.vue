@@ -11,18 +11,18 @@
     </header>
 
     <div class="usage__keypoints">
-      <div class="keypoint keypoint--primary">
+      <TCard>
         <span class="keypoint__k">101 components</span>
         <span class="keypoint__v">buttons, cards, tables, charts, forms &amp; modals — all live-previewable from the sidebar.</span>
-      </div>
-      <div class="keypoint">
+      </TCard>
+      <TCard>
         <span class="keypoint__k">Drop-in layer</span>
         <span class="keypoint__v">extends your Nuxt config — components &amp; tokens auto-import, no manual wiring.</span>
-      </div>
-      <div class="keypoint">
+      </TCard>
+      <TCard>
         <span class="keypoint__k">The explorer is the docs</span>
         <span class="keypoint__v">click any component to see it rendered with correct sample data &amp; props.</span>
-      </div>
+      </TCard>
     </div>
 
     <section class="usage__block">
@@ -128,7 +128,7 @@ const total = components.length;
   max-width: 1400px;
   margin: 0 auto;
   padding: 2.5rem 3rem 3rem;
-  color: #06402a;
+  color: var(--color-primary-dark);
 }
 
 .usage__head {
@@ -137,8 +137,8 @@ const total = components.length;
 
 .usage__badge {
   display: inline-block;
-  background: #047844;
-  color: #ffffff;
+  background: var(--color-primary);
+  color: var(--color-bg-white);
   font-size: 0.75rem;
   font-weight: 700;
   letter-spacing: 0.06em;
@@ -152,13 +152,13 @@ const total = components.length;
   font-size: 2.6rem;
   font-weight: 800;
   margin: 0;
-  color: #047844;
+  color: var(--color-primary);
   letter-spacing: -0.02em;
 }
 
 .usage__tagline {
   font-size: 1.15rem;
-  color: #2f5a48;
+  color: var(--color-text-secondary);
   margin: 0.6rem 0 0;
   line-height: 1.55;
   max-width: 60ch;
@@ -171,35 +171,17 @@ const total = components.length;
   margin-bottom: 2.25rem;
 }
 
-.keypoint {
-  background: #ffffff;
-  border: 1px solid #cfe5da;
-  border-radius: 0.7rem;
-  padding: 1rem 1.15rem;
-  display: flex;
-  flex-direction: column;
-  gap: 0.35rem;
-}
-
-.keypoint--primary {
-  background: #047844;
-  border-color: #047844;
-}
-
-.keypoint--primary .keypoint__k,
-.keypoint--primary .keypoint__v {
-  color: #ffffff;
-}
-
 .keypoint__k {
   font-size: 0.95rem;
   font-weight: 700;
-  color: #047844;
+  color: var(--color-primary);
+  display: block;
+  margin-bottom: 0.35rem;
 }
 
 .keypoint__v {
   font-size: 0.85rem;
-  color: #2f5a48;
+  color: var(--color-text-secondary);
   line-height: 1.45;
 }
 
@@ -210,26 +192,26 @@ const total = components.length;
 .usage__block h2 {
   font-size: 1.1rem;
   margin: 0 0 0.5rem;
-  color: #047844;
+  color: var(--color-primary);
 }
 
 .usage__block p {
-  color: #2f5a48;
+  color: var(--color-text-secondary);
   line-height: 1.5;
   margin: 0 0 0.6rem;
 }
 
 .usage__block code {
-  background: #eef6f1;
+  background: var(--color-primary-light);
   padding: 0.1rem 0.35rem;
   border-radius: 0.3rem;
   font-size: 0.875em;
 }
 
 .usage__code {
-  background: #ffffff;
-  color: #0c2a1e;
-  border: 1px solid #cfe5da;
+  background: var(--color-bg-white);
+  color: var(--color-text-primary);
+  border: 1px solid var(--color-border-light);
   padding: 1rem 1.25rem;
   border-radius: 0.6rem;
   overflow-x: auto;
@@ -249,8 +231,8 @@ const total = components.length;
   display: flex;
   flex-direction: column;
   gap: 0.35rem;
-  background: #ffffff;
-  border: 1px solid #cfe5da;
+  background: var(--color-bg-white);
+  border: 1px solid var(--color-border-light);
   border-radius: 0.6rem;
   padding: 0.85rem 1rem;
   cursor: pointer;
@@ -259,8 +241,8 @@ const total = components.length;
 }
 
 .usage__cat:hover {
-  border-color: #047844;
-  box-shadow: 0 2px 10px rgba(4, 120, 68, 0.12);
+  border-color: var(--color-primary);
+  box-shadow: 0 2px 10px rgba(var(--color-primary-rgb), 0.12);
   transform: translateY(-1px);
 }
 
@@ -268,7 +250,7 @@ const total = components.length;
   font-size: 0.85rem;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  color: #047844;
+  color: var(--color-primary);
   margin: 0;
 }
 
@@ -280,7 +262,7 @@ const total = components.length;
 
 .usage__cat li {
   font-size: 0.78rem;
-  color: #2f5a48;
+  color: var(--color-text-secondary);
   padding: 0.08rem 0;
 }
 
@@ -288,19 +270,19 @@ const total = components.length;
   margin-top: 0.25rem;
   font-size: 0.78rem;
   font-weight: 700;
-  color: #047844;
+  color: var(--color-primary);
 }
 
 .usage__callout {
   display: flex;
   gap: 1rem;
   align-items: flex-start;
-  background: #fff6e6;
-  border: 1px solid #f3d28a;
-  border-left: 5px solid #d99a18;
+  background: var(--color-warning-bg);
+  border: 1px solid var(--color-warning);
+  border-left: 5px solid var(--color-accent-dark);
   border-radius: 0.6rem;
   padding: 1rem 1.25rem;
-  color: #5c4310;
+  color: var(--color-warning-text);
   font-size: 0.92rem;
   line-height: 1.55;
   margin: 1.75rem 0;
@@ -308,8 +290,8 @@ const total = components.length;
 
 .usage__callout-tag {
   flex-shrink: 0;
-  background: #d99a18;
-  color: #ffffff;
+  background: var(--color-accent-dark);
+  color: var(--color-bg-white);
   font-size: 0.7rem;
   font-weight: 700;
   letter-spacing: 0.05em;
@@ -319,12 +301,12 @@ const total = components.length;
 }
 
 .usage__callout strong {
-  color: #7a4f00;
+  color: var(--color-accent-dark);
 }
 
 .usage__hint {
   margin-top: 1.5rem;
-  color: #4a7a64;
+  color: var(--color-text-muted);
   font-size: 0.9rem;
 }
 </style>

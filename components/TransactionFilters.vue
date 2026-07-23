@@ -364,11 +364,11 @@ function reset() {
   }
 
   &--income.active {
-    background-color: #059669;
+    background-color: $income;
   }
 
   &--expense.active {
-    background-color: #dc2626;
+    background-color: $expense;
   }
 }
 

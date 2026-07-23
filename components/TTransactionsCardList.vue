@@ -289,8 +289,8 @@ function formatShortDate(txn) {
   border-radius: $radius-sm;
   font-size: 10px;
   font-weight: bold;
-  background-color: rgba(255, 159, 67, 0.18);
-  color: #b45309;
+  background-color: rgba(var(--color-accent-rgb), 0.18);
+  color: $accent-dark;
   vertical-align: middle;
 }
 

@@ -121,14 +121,14 @@ watch(selectedKey, () => { renderError.value = null; });
 }
 .error-hint {
   padding: 2rem;
-  color: #7a1c1c;
+  color: var(--color-error-dark);
 }
 .error-hint h3 {
   margin-top: 0;
 }
 .error-hint pre {
-  background: #fff4f4;
-  border: 1px solid #f3c2c2;
+  background: rgba(var(--color-error-rgb), 0.08);
+  border: 1px solid rgba(var(--color-error-rgb), 0.2);
   border-radius: 0.5rem;
   padding: 0.75rem 1rem;
   overflow-x: auto;

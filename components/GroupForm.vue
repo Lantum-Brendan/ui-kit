@@ -229,7 +229,7 @@ function handleClose() {
 }
 
 .error-text {
-  color: #dc2626;
+  color: $error-color;
   font-size: 0.875rem;
   margin-top: 0.25rem;
 }
