@@ -15,12 +15,23 @@ describe('EmptyState', () => {
     cy.get('.add-entity-btn').should('contain.text', 'Add item');
   });
 
-  it('renders the empty icon from public assets', () => {
+  it('renders the inline SVG icon by default', () => {
     cy.mount(EmptyState, {
       props: { title: 't', subtitle: 's', iconAlt: 'Box' }
     });
-    cy.get('.empty-icon').should('have.attr', 'src').and('include', 'box.svg');
-    cy.get('.empty-icon').should('have.attr', 'alt', 'Box');
+    cy.get('.empty-icon svg').should('exist');
+    cy.get('.empty-icon svg path').should('exist');
+  });
+
+  it('allows icon slot override', () => {
+    cy.mount(EmptyState, {
+      props: { title: 't', subtitle: 's' },
+      slots: {
+        icon: '<img src="custom-empty.png" alt="Custom" />'
+      }
+    });
+    cy.get('.empty-icon img').should('have.attr', 'src', 'custom-empty.png');
+    cy.get('.empty-icon svg').should('not.exist');
   });
 
   it('emits create when the button is clicked', () => {

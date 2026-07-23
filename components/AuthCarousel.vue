@@ -3,7 +3,20 @@
     <div class="sidebar-content">
       <div class="carousel-slide">
         <div class="slide-image-wrapper">
-          <div class="carousel-image" />
+          <slot name="image" class="carousel-image">
+            <div class="carousel-image">
+              <svg width="320" height="280" viewBox="0 0 320 280" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <rect x="40" y="20" width="240" height="240" rx="16" fill="rgba(255,255,255,0.1)" stroke="rgba(255,255,255,0.2)" stroke-width="1.5"/>
+                <path d="M80 180L130 130L170 170L220 100L280 160" stroke="rgba(255,255,255,0.5)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                <circle cx="130" cy="130" r="6" fill="rgba(255,255,255,0.6)"/>
+                <circle cx="170" cy="170" r="6" fill="rgba(255,255,255,0.6)"/>
+                <circle cx="220" cy="100" r="6" fill="rgba(255,255,255,0.6)"/>
+                <circle cx="280" cy="160" r="6" fill="rgba(255,255,255,0.6)"/>
+                <rect x="60" y="40" width="80" height="8" rx="4" fill="rgba(255,255,255,0.15)"/>
+                <rect x="60" y="56" width="120" height="6" rx="3" fill="rgba(255,255,255,0.1)"/>
+              </svg>
+            </div>
+          </slot>
         </div>
         <div class="sidebar-text">
           <transition name="fade" mode="out-in">
@@ -109,9 +122,14 @@ onBeforeUnmount(() => clearInterval(slideInterval));
   .carousel-image {
     width: 100%;
     height: 100%;
-    background: url('/floating-docs-man.svg') no-repeat center;
-    background-size: contain;
-    opacity: 0.9;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    svg {
+      width: 100%;
+      height: 100%;
+    }
   }
 }
 

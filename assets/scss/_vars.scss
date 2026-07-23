@@ -37,7 +37,7 @@ $warning: var(--color-warning);
 $warning-bg: var(--color-warning-bg);
 $warning-text: var(--color-warning-text);
 $border-color: var(--color-border);
-$input-focus: rgba(4, 120, 68, 0.5);
+$input-focus: rgba(var(--color-primary-rgb), 0.5);
 
 // Table colors
 $table-header-bg: var(--color-table-header);
