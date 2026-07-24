@@ -1,28 +1,26 @@
 <template>
-  <form class="card-form" @submit.prevent="handleSubmit">
-    <div class="form-header">
-      <h2>{{ isEditing ? labels.editGroup : labels.createGroup }}</h2>
-      <button type="button" class="close-btn" @click="handleClose">
-        <X />
-      </button>
-    </div>
-
-    <div class="form-group">
-      <label for="group-name" class="form-label">{{ labels.groupName }}</label>
+  <TForm
+    :title="isEditing ? labels.editGroup : labels.createGroup"
+    :api-error="props.apiError"
+    :is-submitting="props.isSubmitting"
+    :submit-label="isEditing ? labels.updateGroup : labels.createGroup"
+    :cancel-label="labels.cancel"
+    @submit="handleSubmit"
+    @close="handleClose"
+  >
+    <TFormField
+      :label="labels.groupName"
+      field-id="group-name"
+      :error="nameError ? labels.groupNameRequired : ''"
+      required
+    >
       <div class="name-icon-row">
-        <div class="name-col">
-          <input
-            id="group-name"
-            v-model="form.name"
-            type="text"
-            class="form-input"
-            :class="{ error: nameError || props.apiError }"
-            :placeholder="labels.enterGroupName"
-            required
-          />
-          <div v-if="nameError" class="error-text">{{ labels.groupNameRequired }}</div>
-          <div v-if="props.apiError" class="error-text">{{ props.apiError }}</div>
-        </div>
+        <TFormInput
+          id="group-name"
+          v-model="form.name"
+          :placeholder="labels.enterGroupName"
+          :error="nameError || !!props.apiError"
+        />
         <div class="icon-col">
           <button
             type="button"
@@ -44,41 +42,34 @@
       <div v-if="showIconPicker" class="icon-popover">
         <IconPicker v-model="form.icon" @update:model-value="onIconSelected" />
       </div>
-    </div>
+    </TFormField>
 
-    <div class="form-group">
-      <label for="group-description" class="form-label">{{ labels.groupDescription }}</label>
-      <textarea
+    <TFormField
+      :label="labels.groupDescription"
+      field-id="group-description"
+      :error="descriptionError ? labels.groupDescriptionRequired : ''"
+      required
+    >
+      <TFormTextarea
         id="group-description"
         v-model="form.description"
-        class="form-textarea"
-        :class="{ error: descriptionError }"
         :placeholder="labels.typeGroupDescription"
-        rows="5"
-        required
+        :rows="4"
+        :error="descriptionError"
       />
-      <div v-if="descriptionError" class="error-text">
-        {{ labels.groupDescriptionRequired }}
-      </div>
-    </div>
-
-    <div class="form-actions">
-      <button type="button" class="btn btn-secondary" @click="handleClose">
-        {{ labels.cancel }}
-      </button>
-      <button type="submit" class="btn btn-primary" :disabled="props.isSubmitting">
-        <span v-if="props.isSubmitting">{{ isEditing ? labels.updating : labels.creating }}</span>
-        <span v-else>{{ isEditing ? labels.updateGroup : labels.createGroup }}</span>
-      </button>
-    </div>
-  </form>
+    </TFormField>
+  </TForm>
 </template>
 
 <script setup>
 import { ref, computed, watch } from 'vue';
+import TForm from './TForm.vue';
+import TFormField from './TFormField.vue';
+import TFormInput from './TFormInput.vue';
+import TFormTextarea from './TFormTextarea.vue';
 import IconPicker from './IconPicker.vue';
-import * as lucideIcons from 'lucide-vue-next';
-import { ImagePlus, X } from 'lucide-vue-next';
+import { useLucideIcon } from '../composables/useLucideIcon';
+import { ImagePlus } from 'lucide-vue-next';
 
 const props = defineProps({
   editingItem: {
@@ -125,24 +116,14 @@ const nameError = ref(false);
 const descriptionError = ref(false);
 const showIconPicker = ref(false);
 
-const selectedIconComponent = computed(() => {
-  const key = form.value.icon;
-  if (key && typeof lucideIcons[key] === 'function') {
-    return lucideIcons[key];
-  }
-  return null;
-});
-
+const selectedIconComponent = useLucideIcon(computed(() => form.value.icon));
 const isEditing = computed(() => !!props.editingItem);
 
-// Populate form when editing
 watch(
   () => props.editingItem,
   (newItem) => {
     if (newItem) {
-      // Extract icon value - could be from icon.content or direct icon value
       const iconValue = newItem.icon?.content || newItem.icon || '';
-
       form.value = {
         name: newItem.name || '',
         description: newItem.description || '',
@@ -164,18 +145,14 @@ function resetForm() {
 
 function validateForm() {
   let isValid = true;
-
-  // Reset errors
   nameError.value = false;
   descriptionError.value = false;
 
-  // Validate name
   if (!form.value.name || form.value.name.trim() === '') {
     nameError.value = true;
     isValid = false;
   }
 
-  // Validate description
   if (!form.value.description || form.value.description.trim() === '') {
     descriptionError.value = true;
     isValid = false;
@@ -185,11 +162,7 @@ function validateForm() {
 }
 
 function handleSubmit() {
-  if (props.isSubmitting) {
-    return;
-  }
-
-  if (!validateForm()) return;
+  if (props.isSubmitting || !validateForm()) return;
 
   const formData = {
     name: form.value.name.trim(),
@@ -221,16 +194,39 @@ function handleClose() {
 <style scoped lang="scss">
 @use '../assets/scss/_vars.scss' as *;
 
-.submit-btn {
-  &:disabled {
-    opacity: 0.7;
-    cursor: not-allowed;
+.name-icon-row {
+  display: flex;
+  gap: $spacing-2;
+  align-items: center;
+}
+
+.icon-col {
+  flex-shrink: 0;
+}
+
+.icon-trigger {
+  width: 42px;
+  height: 42px;
+  border-radius: $radius-lg;
+  border: 1px solid $border-color;
+  background-color: $input-bg;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: $text-primary;
+
+  &:hover {
+    border-color: $primary;
+  }
+
+  &__icon {
+    width: 20px;
+    height: 20px;
   }
 }
 
-.error-text {
-  color: $error-color;
-  font-size: 0.875rem;
-  margin-top: 0.25rem;
+.icon-popover {
+  margin-top: $spacing-2;
 }
 </style>

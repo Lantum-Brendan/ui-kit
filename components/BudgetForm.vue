@@ -1,191 +1,257 @@
 <template>
-  <form class="budget-form" @submit.prevent="handleSubmit">
-    <div class="form-header">
-      <h2>{{ editingItem ? labels.editBudget : labels.createBudget }}</h2>
-      <button type="button" class="close-btn" @click="$emit('close')">&times;</button>
-    </div>
+  <TForm
+    :title="editingItem ? labels.editBudget : labels.createBudget"
+    :api-error="apiError"
+    :is-submitting="isSubmitting"
+    :submit-label="editingItem ? labels.updateBudget : labels.createBudget"
+    :cancel-label="labels.cancel"
+    @submit="handleSubmit"
+    @close="$emit('close')"
+  >
+    <TFormRow :cols="2">
+      <TFormField :label="labels.budgetName" field-id="budget-name" required>
+        <TFormInput
+          id="budget-name"
+          v-model="form.name"
+          type="text"
+          maxlength="255"
+        />
+      </TFormField>
 
-    <div class="form-grid">
-      <div class="field">
-        <label>{{ labels.budgetName }}</label>
-        <input v-model="form.name" type="text" required maxlength="255" />
-      </div>
-
-      <div class="field">
-        <label>{{ labels.spendingLimit }}</label>
+      <TFormField
+        :label="labels.spendingLimit"
+        field-id="budget-limit"
+        :hint="currencyOptions.length === 0 ? labels.addWalletFirst : ''"
+        required
+      >
         <div class="amount-row">
-          <input v-model.number="form.amount" type="number" min="0" step="0.01" required />
-          <select v-model="form.currency" class="currency">
-            <option v-for="code in currencyOptions" :key="code" :value="code">{{ code }}</option>
-          </select>
+          <TFormInput
+            id="budget-limit"
+            v-model.number="form.amount"
+            type="number"
+            :min="0"
+            :step="0.01"
+          />
+          <TFormSelect
+            v-model="form.currency"
+            :options="currencySelectOptions"
+            class="currency-select"
+          />
         </div>
-        <p v-if="currencyOptions.length === 0" class="field-hint">
-          {{ labels.addWalletFirst }}
+      </TFormField>
+    </TFormRow>
+
+    <TFormRow :cols="form.period_type === 'custom' ? 3 : 2">
+      <TFormField :label="labels.budgetPeriod" field-id="budget-period">
+        <TFormSelect
+          id="budget-period"
+          v-model="form.period_type"
+          :options="periodOptions"
+        />
+      </TFormField>
+
+      <TFormField :label="labels.startDate" field-id="budget-start" required>
+        <TFormInput
+          id="budget-start"
+          v-model="form.start_date"
+          type="date"
+        />
+      </TFormField>
+
+      <TFormField
+        v-if="form.period_type === 'custom'"
+        :label="labels.endDate"
+        field-id="budget-end"
+        required
+      >
+        <TFormInput
+          id="budget-end"
+          v-model="form.end_date"
+          type="date"
+        />
+      </TFormField>
+    </TFormRow>
+
+    <TFormField :label="labels.budgetDescription" field-id="budget-desc" full>
+      <TFormTextarea
+        id="budget-desc"
+        v-model="form.description"
+        :rows="2"
+        :maxlength="500"
+      />
+    </TFormField>
+
+    <TFormField
+      :label="labels.budgetTargets"
+      :hint="labels.budgetTargetsHint"
+      full
+    >
+      <div class="target-tabs">
+        <button
+          v-for="tab in targetTabs"
+          :key="tab.key"
+          type="button"
+          class="tab"
+          :class="{ active: activeTargetTab === tab.key }"
+          @click="activeTargetTab = tab.key"
+        >
+          {{ labels.targetTabs?.[tab.key] || tab.label }}
+          <span class="count">{{ selectedCount(tab.key) }}</span>
+        </button>
+      </div>
+      <div class="target-list">
+        <label
+          v-for="item in targetItems"
+          :key="`${activeTargetTab}-${item.id}`"
+          class="target-row"
+        >
+          <input
+            type="checkbox"
+            :checked="isSelected(activeTargetTab, item.id)"
+            @change="toggleTarget(activeTargetTab, item.id)"
+          />
+          <span>{{ item.name }}</span>
+        </label>
+        <p v-if="targetItems.length === 0" class="empty-hint">
+          {{ labels.noItemsToChoose }}
         </p>
       </div>
+    </TFormField>
 
-      <div class="field">
-        <label>{{ labels.budgetPeriod }}</label>
-        <select v-model="form.period_type">
-          <option value="weekly">{{ labels.weekly }}</option>
-          <option value="monthly">{{ labels.monthly }}</option>
-          <option value="yearly">{{ labels.yearly }}</option>
-          <option value="custom">{{ labels.customRange }}</option>
-        </select>
-      </div>
-
-      <div class="field">
-        <label>{{ labels.startDate }}</label>
-        <input v-model="form.start_date" type="date" required />
-      </div>
-
-      <div v-if="form.period_type === 'custom'" class="field">
-        <label>{{ labels.endDate }}</label>
-        <input v-model="form.end_date" type="date" required />
-      </div>
-
-      <div class="field field--full">
-        <label>{{ labels.budgetDescription }}</label>
-        <textarea v-model="form.description" rows="2" maxlength="500" />
-      </div>
-
-      <div class="field field--full">
-        <label>{{ labels.budgetTargets }}</label>
-        <p class="field-hint">
-          {{ labels.budgetTargetsHint }}
-        </p>
-        <div class="target-tabs">
-          <button
-            v-for="tab in targetTabs"
-            :key="tab.key"
-            type="button"
-            class="tab"
-            :class="{ active: activeTargetTab === tab.key }"
-            @click="activeTargetTab = tab.key"
-          >
-            {{ labels.targetTabs[tab.key] || tab.label }}
-            <span class="count">{{ selectedCount(tab.key) }}</span>
-          </button>
-        </div>
-        <div class="target-list">
-          <label
-            v-for="item in targetItems"
-            :key="`${activeTargetTab}-${item.id}`"
-            class="target-row"
-          >
-            <input
-              type="checkbox"
-              :checked="isSelected(activeTargetTab, item.id)"
-              @change="toggleTarget(activeTargetTab, item.id)"
-            />
-            <span>{{ item.name }}</span>
-          </label>
-          <p v-if="targetItems.length === 0" class="empty-hint">
-            {{ labels.noItemsToChoose }}
-          </p>
-        </div>
-      </div>
-
-      <div class="field">
+    <TFormRow :cols="2">
+      <TFormField :hint="labels.rolloverHint">
         <label class="inline-toggle">
           <input v-model="form.rollover_enabled" type="checkbox" />
           <span>{{ labels.rolloverUnused }}</span>
         </label>
-        <p class="field-hint">
-          {{ labels.rolloverHint }}
-        </p>
-      </div>
+      </TFormField>
 
-      <div class="field">
-        <label>
-          {{ labels.alertThreshold }}
-          <template v-if="form.threshold_percent > 0">({{ form.threshold_percent }}%)</template>
-          <template v-else>— {{ labels.off }}</template>
-        </label>
-        <input v-model.number="form.threshold_percent" type="range" min="0" max="100" step="5" />
-        <p class="field-hint">
-          {{ labels.alertThresholdHint }}
-        </p>
-      </div>
+      <TFormField
+        :label="`${labels.alertThreshold} ${form.threshold_percent > 0 ? '(' + form.threshold_percent + '%)' : '— ' + labels.off}`"
+        :hint="labels.alertThresholdHint"
+      >
+        <input
+          v-model.number="form.threshold_percent"
+          type="range"
+          min="0"
+          max="100"
+          step="5"
+          class="range-input"
+        />
+      </TFormField>
+    </TFormRow>
 
-      <div class="field">
+    <TFormRow :cols="2">
+      <TFormField :hint="labels.forecastAlertsHint">
         <label class="inline-toggle">
           <input v-model="form.forecast_alerts_enabled" type="checkbox" />
           <span>{{ labels.forecastAlerts }}</span>
         </label>
-        <p class="field-hint">
-          {{ labels.forecastAlertsHint }}
-        </p>
-      </div>
+      </TFormField>
 
-      <div class="field">
+      <TFormField>
         <label class="inline-toggle">
           <input v-model="form.is_active" type="checkbox" />
           <span>{{ labels.active }}</span>
         </label>
-      </div>
-    </div>
-
-    <p v-if="apiError" class="error-message">{{ apiError }}</p>
-
-    <div class="actions">
-      <button type="button" class="btn btn--ghost" @click="$emit('close')">
-        {{ labels.cancel }}
-      </button>
-      <button type="submit" class="btn btn--primary" :disabled="isSubmitting || !canSubmit">
-        {{ editingItem ? labels.updateBudget : labels.createBudget }}
-      </button>
-    </div>
-  </form>
+      </TFormField>
+    </TFormRow>
+  </TForm>
 </template>
 
 <script setup lang="ts">
 import { computed, reactive, ref, watch } from 'vue';
+import TForm from './TForm.vue';
+import TFormField from './TFormField.vue';
+import TFormRow from './TFormRow.vue';
+import TFormInput from './TFormInput.vue';
+import TFormSelect from './TFormSelect.vue';
+import TFormTextarea from './TFormTextarea.vue';
 
-const props = defineProps<{
-  editingItem?: any;
-  apiError?: string;
-  isSubmitting?: boolean;
-  defaults?: {
-    threshold?: number;
-    rollover?: boolean;
-    period?: string;
-    forecast?: boolean;
-    currency?: string;
-  };
-  wallets?: Array<{ currency?: string }>;
-  categories?: Array<{ id: number; name: string }>;
-  groups?: Array<{ id: number; name: string }>;
-  labels?: {
-    editBudget: string;
-    createBudget: string;
-    budgetName: string;
-    spendingLimit: string;
-    addWalletFirst: string;
-    budgetPeriod: string;
-    weekly: string;
-    monthly: string;
-    yearly: string;
-    customRange: string;
-    startDate: string;
-    endDate: string;
-    budgetDescription: string;
-    budgetTargets: string;
-    budgetTargetsHint: string;
-    targetTabs: Record<string, string>;
-    noItemsToChoose: string;
-    rolloverUnused: string;
-    rolloverHint: string;
-    alertThreshold: string;
-    off: string;
-    alertThresholdHint: string;
-    forecastAlerts: string;
-    forecastAlertsHint: string;
-    active: string;
-    cancel: string;
-    updateBudget: string;
-  };
-}>();
+const props = withDefaults(
+  defineProps<{
+    editingItem?: any;
+    apiError?: string;
+    isSubmitting?: boolean;
+    defaults?: {
+      threshold?: number;
+      rollover?: boolean;
+      period?: string;
+      forecast?: boolean;
+      currency?: string;
+    };
+    wallets?: Array<{ id?: number; name?: string; currency?: string }>;
+    categories?: Array<{ id: number; name: string }>;
+    groups?: Array<{ id: number; name: string }>;
+    labels?: {
+      editBudget: string;
+      createBudget: string;
+      budgetName: string;
+      spendingLimit: string;
+      addWalletFirst: string;
+      budgetPeriod: string;
+      weekly: string;
+      monthly: string;
+      yearly: string;
+      customRange: string;
+      startDate: string;
+      endDate: string;
+      budgetDescription: string;
+      budgetTargets: string;
+      budgetTargetsHint: string;
+      targetTabs: Record<string, string>;
+      noItemsToChoose: string;
+      rolloverUnused: string;
+      rolloverHint: string;
+      alertThreshold: string;
+      off: string;
+      alertThresholdHint: string;
+      forecastAlerts: string;
+      forecastAlertsHint: string;
+      active: string;
+      cancel: string;
+      updateBudget: string;
+    };
+  }>(),
+  {
+    editingItem: null,
+    apiError: '',
+    isSubmitting: false,
+    defaults: () => ({}),
+    wallets: () => [],
+    categories: () => [],
+    groups: () => [],
+    labels: () => ({
+      editBudget: 'Edit Budget',
+      createBudget: 'Create Budget',
+      budgetName: 'Budget Name',
+      spendingLimit: 'Spending Limit',
+      addWalletFirst: 'Add a wallet first',
+      budgetPeriod: 'Budget Period',
+      weekly: 'Weekly',
+      monthly: 'Monthly',
+      yearly: 'Yearly',
+      customRange: 'Custom Range',
+      startDate: 'Start Date',
+      endDate: 'End Date',
+      budgetDescription: 'Budget Description',
+      budgetTargets: 'Budget Targets',
+      budgetTargetsHint: 'Limit applies across selected items',
+      targetTabs: {},
+      noItemsToChoose: 'No items available',
+      rolloverUnused: 'Rollover unused balance',
+      rolloverHint: 'Carry over unspent budget to the next period',
+      alertThreshold: 'Alert Threshold',
+      off: 'Off',
+      alertThresholdHint: 'Notify when spending reaches this %',
+      forecastAlerts: 'Forecast Alerts',
+      forecastAlertsHint: 'Warn if pace exceeds limit',
+      active: 'Active',
+      cancel: 'Cancel',
+      updateBudget: 'Update Budget'
+    })
+  }
+);
 
 const emit = defineEmits<{
   (e: 'created' | 'updated', payload: any): void;
@@ -193,14 +259,8 @@ const emit = defineEmits<{
 }>();
 
 const defaultCurrency = computed(() => props.defaults?.currency ?? 'USD');
-
-// Backend serializes dates as ISO datetime (`2026-04-18T00:00:00Z`), but
-// <input type="date"> needs a bare `YYYY-MM-DD` or it renders empty.
 const toDateInput = (value: string): string => (value ? value.slice(0, 10) : '');
 
-// Pull distinct currency codes from the user's wallets. If the user has
-// no wallets yet, fall back to the configured default so the dropdown
-// is never empty when there's a currency configured globally.
 const currencyOptions = computed<string[]>(() => {
   const wallets = (props.wallets ?? []) as Array<{ currency?: string }>;
   const codes = new Set<string>();
@@ -212,6 +272,17 @@ const currencyOptions = computed<string[]>(() => {
   }
   return Array.from(codes).sort();
 });
+
+const currencySelectOptions = computed(() =>
+  currencyOptions.value.map((c) => ({ label: c, value: c }))
+);
+
+const periodOptions = computed(() => [
+  { label: props.labels.weekly, value: 'weekly' },
+  { label: props.labels.monthly, value: 'monthly' },
+  { label: props.labels.yearly, value: 'yearly' },
+  { label: props.labels.customRange, value: 'custom' }
+]);
 
 const buildInitial = () => ({
   name: '',
@@ -230,9 +301,6 @@ const buildInitial = () => ({
 
 const form = reactive(buildInitial());
 
-// Keep form.currency within the dropdown's options. When the default isn't
-// available (e.g. user's configured default-currency has no wallet yet),
-// fall back to the first option so the select always shows a real value.
 watch(
   currencyOptions,
   (options) => {
@@ -302,27 +370,27 @@ const toggleTarget = (type: string, id: number) => {
   }
 };
 
-const selectedCount = (type: string) =>
-  form.targets.filter((t) => t.type === type).length;
+const selectedCount = (type: string) => form.targets.filter((t) => t.type === type).length;
 
-const canSubmit = computed(
-  () =>
-    form.name.trim() !== '' &&
-    form.amount > 0 &&
-    form.currency.length === 3 &&
-    form.start_date !== '' &&
-    (form.period_type !== 'custom' || !!form.end_date)
-);
+const canSubmit = computed(() => {
+  if (!form.name.trim()) return false;
+  if (!form.amount || form.amount <= 0) return false;
+  if (!form.start_date) return false;
+  if (form.period_type === 'custom' && !form.end_date) return false;
+  return true;
+});
 
 const handleSubmit = () => {
-  const payload: Record<string, unknown> = {
+  if (props.isSubmitting || !canSubmit.value) return;
+
+  const payload = {
     name: form.name.trim(),
-    description: form.description || undefined,
+    description: form.description.trim() || undefined,
     amount: form.amount,
-    currency: form.currency.toUpperCase(),
+    currency: form.currency,
     period_type: form.period_type,
     start_date: form.start_date,
-    end_date: form.period_type === 'custom' ? form.end_date : null,
+    end_date: form.period_type === 'custom' ? form.end_date : undefined,
     rollover_enabled: form.rollover_enabled,
     threshold_percent: form.threshold_percent,
     forecast_alerts_enabled: form.forecast_alerts_enabled,
@@ -330,8 +398,8 @@ const handleSubmit = () => {
     targets: form.targets
   };
 
-  if (props.editingItem?.id) {
-    emit('updated', { ...payload, id: props.editingItem.id });
+  if (props.editingItem) {
+    emit('updated', { id: props.editingItem.id, ...payload });
   } else {
     emit('created', payload);
   }
@@ -341,245 +409,88 @@ const handleSubmit = () => {
 <style lang="scss" scoped>
 @use '../assets/scss/_vars.scss' as *;
 
-.budget-form {
-  background: $bg-white;
-  color: $text-primary;
-  border: 1px solid $border-color;
-  border-radius: $radius-xl;
-  padding: 1.5rem;
-  width: 100%;
-  box-sizing: border-box;
-}
-
-.form-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 1.25rem;
-
-  h2 {
-    font-size: $font-size-xl;
-    color: $text-primary;
-    margin: 0;
-  }
-  .close-btn {
-    background: transparent;
-    border: none;
-    font-size: 1.5rem;
-    cursor: pointer;
-    color: $text-muted;
-
-    &:hover {
-      color: $text-primary;
-    }
-  }
-}
-
-.form-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 1rem 1.25rem;
-
-  @media (max-width: $breakpoint-md) {
-    grid-template-columns: 1fr;
-  }
-}
-
-.field {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-
-  &--full {
-    grid-column: 1 / -1;
-  }
-
-  label {
-    font-size: $font-size-sm;
-    font-weight: $font-medium;
-    color: $text-secondary;
-  }
-
-  input[type='text'],
-  input[type='number'],
-  input[type='date'],
-  select,
-  textarea {
-    padding: 0.5rem 0.75rem;
-    border: 1px solid $border-color;
-    border-radius: $radius-lg;
-    background-color: $input-bg;
-    color: $text-primary;
-    font-size: $font-size-sm;
-    font-family: inherit;
-
-    &::placeholder {
-      color: $text-muted;
-    }
-
-    &:focus {
-      outline: none;
-      border-color: $primary;
-      box-shadow: 0 0 0 2px rgba(var(--color-primary-rgb), 0.15);
-    }
-  }
-
-  // Native date picker icon loses contrast on dark mode; invert it.
-  input[type='date'] {
-    color-scheme: light dark;
-  }
-
-  input[type='range'] {
-    width: 100%;
-    accent-color: $primary;
-  }
-}
-
 .amount-row {
   display: flex;
-  gap: 8px;
+  gap: $spacing-2;
 
-  input[type='number'] {
-    flex-grow: 1;
-  }
-  .currency {
-    width: 100px;
-    text-transform: uppercase;
-  }
-}
-
-.field-hint {
-  margin: 4px 0 0;
-  font-size: $font-size-xs;
-  color: $text-muted;
-}
-
-.inline-toggle {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: $font-size-sm;
-  font-weight: $font-normal;
-  color: $text-primary;
-
-  input[type='checkbox'] {
-    accent-color: $primary;
+  .currency-select {
+    width: 110px;
+    flex-shrink: 0;
   }
 }
 
 .target-tabs {
   display: flex;
-  gap: 4px;
-  border-bottom: 1px solid $border-color;
-  margin-bottom: 8px;
+  gap: $spacing-2;
+  margin-bottom: $spacing-3;
 
   .tab {
-    background: transparent;
-    border: none;
-    border-bottom: 2px solid transparent;
-    padding: 8px 12px;
-    font-size: $font-size-sm;
-    color: $text-secondary;
+    padding: $spacing-2 $spacing-3;
+    border-radius: $radius-lg;
+    background: $bg-gray;
+    border: 1px solid $border-color;
     cursor: pointer;
-    display: flex;
-    align-items: center;
-    gap: 6px;
+    font-size: $font-size-sm;
+    font-weight: $font-medium;
+    color: $text-primary;
 
     &.active {
-      color: $primary;
-      border-bottom-color: $primary;
+      background: $primary;
+      color: $text-inverse;
+      border-color: $primary;
+
+      .count {
+        background: rgba(255, 255, 255, 0.25);
+        color: $text-inverse;
+      }
     }
 
     .count {
+      margin-left: $spacing-1;
+      padding: 2px 6px;
+      border-radius: $radius-sm;
       background: $border-color;
-      border-radius: 10px;
-      font-size: 10px;
-      padding: 1px 6px;
+      font-size: $font-size-xs;
     }
   }
 }
 
 .target-list {
-  max-height: 180px;
-  overflow-y: auto;
-  border: 1px solid $border-color;
-  border-radius: $radius-lg;
-  padding: 8px;
-  background-color: $input-bg;
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: $spacing-2;
+  max-height: 160px;
+  overflow-y: auto;
+  padding: $spacing-2;
+  border: 1px solid $border-color;
+  border-radius: $radius-lg;
 }
 
 .target-row {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: $spacing-2;
   font-size: $font-size-sm;
-  color: $text-primary;
-  padding: 4px 6px;
-  border-radius: $radius-md;
   cursor: pointer;
+}
 
-  input[type='checkbox'] {
-    accent-color: $primary;
-  }
+.inline-toggle {
+  display: flex;
+  align-items: center;
+  gap: $spacing-2;
+  font-size: $font-size-sm;
+  font-weight: $font-medium;
+  cursor: pointer;
+}
 
-  &:hover {
-    background-color: rgba(var(--color-primary-rgb), 0.1);
-  }
+.range-input {
+  width: 100%;
+  accent-color: $primary;
 }
 
 .empty-hint {
+  font-size: $font-size-sm;
   color: $text-muted;
-  font-size: $font-size-xs;
   margin: 0;
-  padding: 8px;
-}
-
-.error-message {
-  color: $error-color;
-  margin: 12px 0 0;
-  font-size: $font-size-sm;
-}
-
-.actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 8px;
-  margin-top: 1.25rem;
-}
-
-.btn {
-  padding: 0.5rem 1rem;
-  border-radius: $radius-lg;
-  border: 1px solid transparent;
-  font-size: $font-size-sm;
-  cursor: pointer;
-  font-weight: $font-medium;
-
-  &--ghost {
-    background: transparent;
-    border-color: $border-color;
-    color: $text-secondary;
-
-    &:hover {
-      background-color: rgba(var(--color-primary-rgb), 0.08);
-      color: $primary;
-      border-color: $primary-muted;
-    }
-  }
-
-  &--primary {
-    background: $primary;
-    color: white;
-    &:hover:not(:disabled) {
-      background: $primary-hover;
-    }
-    &:disabled {
-      opacity: 0.6;
-      cursor: not-allowed;
-    }
-  }
 }
 </style>

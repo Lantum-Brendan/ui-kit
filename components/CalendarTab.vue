@@ -1,12 +1,10 @@
 <template>
   <section class="calendar-tab">
-    <header class="tab-header">
-      <div>
-        <p class="eyebrow">{{ labels.calendar }}</p>
-        <h2 class="title">{{ labels.spendingDayByDay }}</h2>
-        <p class="sub">{{ labels.spotBusyDays }}</p>
-      </div>
-    </header>
+    <TSectionHeader
+      :eyebrow="labels.calendar"
+      :title="labels.spendingDayByDay"
+      :subtitle="labels.spotBusyDays"
+    />
 
     <div class="cal-stage">
       <div class="cal-main">
@@ -83,6 +81,7 @@
 import { computed } from 'vue';
 import { Calendar, Flame, BarChart3 } from 'lucide-vue-next';
 import CalendarHeatmap from './CalendarHeatmap.vue';
+import TSectionHeader from './TSectionHeader.vue';
 
 const props = defineProps({
   buckets: { type: Array, required: true },

@@ -1,105 +1,85 @@
 <template>
-  <div class="reminder-form">
-    <div class="form-header">
-      <h2>{{ isEditing ? labels.editReminder : labels.createReminder }}</h2>
-      <button type="button" class="close-btn" @click="$emit('close')">
-        <X />
-      </button>
-    </div>
+  <TForm
+    :title="isEditing ? labels.editReminder : labels.createReminder"
+    :api-error="props.apiError"
+    :is-submitting="props.isSubmitting"
+    :submit-label="isEditing ? labels.updateReminder : labels.createReminder"
+    :cancel-label="labels.cancel"
+    @submit="handleSubmit"
+    @close="$emit('close')"
+  >
+    <TFormField :label="labels.title" field-id="reminder-title" required>
+      <TFormInput
+        id="reminder-title"
+        v-model="form.title"
+        :placeholder="labels.titlePlaceholder"
+        :error="!!props.apiError"
+      />
+    </TFormField>
 
-    <form @submit.prevent="handleSubmit">
-      <div class="form-group">
-        <label class="form-label">{{ labels.title }} *</label>
-        <input
-          v-model="form.title"
-          type="text"
-          class="form-input"
-          :placeholder="labels.titlePlaceholder"
-          required
+    <TFormField :label="labels.description" field-id="reminder-desc">
+      <TFormTextarea
+        id="reminder-desc"
+        v-model="form.description"
+        :placeholder="labels.descriptionPlaceholder"
+        :rows="3"
+      />
+    </TFormField>
+
+    <TFormRow :cols="2">
+      <TFormField :label="labels.type" field-id="reminder-type" required>
+        <TFormSelect
+          id="reminder-type"
+          v-model="form.type"
+          :options="typeOptions"
         />
-        <div v-if="props.apiError" class="error-text">{{ props.apiError }}</div>
-      </div>
+      </TFormField>
 
-      <div class="form-group">
-        <label class="form-label">{{ labels.description }}</label>
-        <textarea
-          v-model="form.description"
-          class="form-input form-textarea"
-          :placeholder="labels.descriptionPlaceholder"
-          rows="3"
+      <TFormField :label="labels.priority" field-id="reminder-priority">
+        <TFormSelect
+          id="reminder-priority"
+          v-model.number="form.priority"
+          :options="priorityOptions"
         />
-      </div>
+      </TFormField>
+    </TFormRow>
 
-      <div class="form-row">
-        <div class="form-group">
-          <label class="form-label">{{ labels.type }} *</label>
-          <select v-model="form.type" class="form-input" required>
-            <option value="daily_tracking">{{ labels.dailyTracking }}</option>
-            <option value="weekly_review">{{ labels.weeklyReview }}</option>
-            <option value="monthly_summary">{{ labels.monthlySummary }}</option>
-            <option value="bill_due">{{ labels.billDue }}</option>
-            <option value="budget_alert">{{ labels.budgetAlert }}</option>
-            <option value="custom">{{ labels.custom }}</option>
-          </select>
-        </div>
+    <TFormRow :cols="2">
+      <TFormField :label="labels.dateTime" field-id="reminder-trigger" required>
+        <TFormInput
+          id="reminder-trigger"
+          v-model="form.trigger_at"
+          type="datetime-local"
+        />
+      </TFormField>
 
-        <div class="form-group">
-          <label class="form-label">{{ labels.priority }}</label>
-          <select v-model="form.priority" class="form-input">
-            <option :value="0">{{ labels.normal }}</option>
-            <option :value="1">{{ labels.high }}</option>
-            <option :value="2">{{ labels.urgent }}</option>
-          </select>
-        </div>
-      </div>
+      <TFormField :label="labels.timezone" field-id="reminder-tz">
+        <TFormSelect
+          id="reminder-tz"
+          v-model="form.timezone"
+          :options="timezoneOptions"
+        />
+      </TFormField>
+    </TFormRow>
 
-      <div class="form-row">
-        <div class="form-group">
-          <label class="form-label">{{ labels.dateTime }} *</label>
-          <input v-model="form.trigger_at" type="datetime-local" class="form-input" required />
-        </div>
-
-        <div class="form-group">
-          <label class="form-label">{{ labels.timezone }}</label>
-          <select v-model="form.timezone" class="form-input">
-            <option value="UTC">UTC</option>
-            <option value="America/New_York">Eastern Time</option>
-            <option value="America/Chicago">Central Time</option>
-            <option value="America/Denver">Mountain Time</option>
-            <option value="America/Los_Angeles">Pacific Time</option>
-            <option value="Europe/London">London</option>
-            <option value="Europe/Paris">Paris</option>
-            <option value="Asia/Tokyo">Tokyo</option>
-          </select>
-        </div>
-      </div>
-
-      <div class="form-group">
-        <label class="form-label">{{ labels.repeat }}</label>
-        <select v-model="repeatOption" class="form-input">
-          <option value="none">{{ labels.doesNotRepeat }}</option>
-          <option value="daily">{{ labels.daily }}</option>
-          <option value="weekly">{{ labels.weekly }}</option>
-          <option value="monthly">{{ labels.monthly }}</option>
-        </select>
-      </div>
-
-      <div class="form-actions">
-        <button type="button" class="btn btn-secondary" @click="$emit('close')">
-          {{ labels.cancel }}
-        </button>
-        <button type="submit" class="btn btn-primary" :disabled="props.isSubmitting">
-          <Loader2 v-if="props.isSubmitting" class="spinner" />
-          {{ isEditing ? labels.updateReminder : labels.createReminder }}
-        </button>
-      </div>
-    </form>
-  </div>
+    <TFormField :label="labels.repeat" field-id="reminder-repeat">
+      <TFormSelect
+        id="reminder-repeat"
+        v-model="repeatOption"
+        :options="repeatSelectOptions"
+      />
+    </TFormField>
+  </TForm>
 </template>
 
 <script setup>
 import { ref, reactive, computed, watch, onMounted } from 'vue';
-import { X, Loader2 } from 'lucide-vue-next';
+import TForm from './TForm.vue';
+import TFormField from './TFormField.vue';
+import TFormRow from './TFormRow.vue';
+import TFormInput from './TFormInput.vue';
+import TFormSelect from './TFormSelect.vue';
+import TFormTextarea from './TFormTextarea.vue';
 
 const props = defineProps({
   editingItem: {
@@ -169,6 +149,39 @@ const repeatRules = {
   monthly: 'FREQ=MONTHLY'
 };
 
+const typeOptions = computed(() => [
+  { label: props.labels.dailyTracking, value: 'daily_tracking' },
+  { label: props.labels.weeklyReview, value: 'weekly_review' },
+  { label: props.labels.monthlySummary, value: 'monthly_summary' },
+  { label: props.labels.billDue, value: 'bill_due' },
+  { label: props.labels.budgetAlert, value: 'budget_alert' },
+  { label: props.labels.custom, value: 'custom' }
+]);
+
+const priorityOptions = computed(() => [
+  { label: props.labels.normal, value: 0 },
+  { label: props.labels.high, value: 1 },
+  { label: props.labels.urgent, value: 2 }
+]);
+
+const timezoneOptions = [
+  { label: 'UTC', value: 'UTC' },
+  { label: 'Eastern Time', value: 'America/New_York' },
+  { label: 'Central Time', value: 'America/Chicago' },
+  { label: 'Mountain Time', value: 'America/Denver' },
+  { label: 'Pacific Time', value: 'America/Los_Angeles' },
+  { label: 'London', value: 'Europe/London' },
+  { label: 'Paris', value: 'Europe/Paris' },
+  { label: 'Tokyo', value: 'Asia/Tokyo' }
+];
+
+const repeatSelectOptions = computed(() => [
+  { label: props.labels.doesNotRepeat, value: 'none' },
+  { label: props.labels.daily, value: 'daily' },
+  { label: props.labels.weekly, value: 'weekly' },
+  { label: props.labels.monthly, value: 'monthly' }
+]);
+
 watch(repeatOption, (val) => {
   form.repeat_rule = repeatRules[val] || null;
 });
@@ -223,9 +236,7 @@ function getDefaultDateTime() {
 }
 
 function handleSubmit() {
-  if (props.isSubmitting) {
-    return;
-  }
+  if (props.isSubmitting) return;
 
   const data = {
     title: form.title,
@@ -254,149 +265,4 @@ onMounted(() => {
 
 <style lang="scss" scoped>
 @use '../assets/scss/_vars.scss' as *;
-
-.reminder-form {
-  background: $bg-white;
-  border-radius: $radius-xl;
-  border: 1px solid $border-color;
-  box-shadow: $shadow-md;
-  padding: 1.5rem;
-}
-
-.form-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 1.5rem;
-
-  h2 {
-    font-size: $font-size-lg;
-    font-weight: $font-semibold;
-    margin: 0;
-  }
-}
-
-.close-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  background: $bg-gray;
-  border: none;
-  cursor: pointer;
-  transition: background 0.2s;
-
-  &:hover {
-    background: $border-color;
-  }
-
-  svg {
-    width: 18px;
-    height: 18px;
-  }
-}
-
-.form-group {
-  margin-bottom: 1rem;
-}
-
-.form-row {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 1rem;
-
-  @media (max-width: $breakpoint-sm) {
-    grid-template-columns: 1fr;
-  }
-}
-
-.form-label {
-  display: block;
-  font-size: $font-size-sm;
-  font-weight: $font-medium;
-  color: $text-primary;
-  margin-bottom: 0.5rem;
-}
-
-.form-input {
-  width: 100%;
-  padding: 0.75rem 1rem;
-  border: 1px solid $border-color;
-  border-radius: $radius-lg;
-  font-size: $font-size-base;
-  transition: border-color 0.2s;
-
-  &:focus {
-    outline: none;
-    border-color: $primary;
-  }
-}
-
-.form-textarea {
-  resize: vertical;
-  min-height: 80px;
-}
-
-.form-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 0.75rem;
-  margin-top: 1.5rem;
-  padding-top: 1rem;
-  border-top: 1px solid $border-color;
-}
-
-.btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.75rem 1.5rem;
-  border-radius: $radius-lg;
-  font-size: $font-size-sm;
-  font-weight: $font-semibold;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.btn-secondary {
-  background: $bg-gray;
-  color: $text-primary;
-  border: 1px solid $border-color;
-
-  &:hover {
-    background: $border-color;
-  }
-}
-
-.btn-primary {
-  background: $primary;
-  color: white;
-  border: none;
-
-  &:hover:not(:disabled) {
-    opacity: 0.9;
-  }
-
-  &:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
-  }
-}
-
-.spinner {
-  width: 16px;
-  height: 16px;
-  animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
-}
 </style>

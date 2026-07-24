@@ -1,23 +1,22 @@
 <template>
   <section class="categories-tab">
-    <header class="tab-header">
-      <div>
-        <p class="eyebrow">{{ labels.categories }}</p>
-        <h2 class="title">{{ labels.whereThings }}</h2>
-        <p class="sub">
-          {{ labels.incomeOnOneSide }}
-        </p>
-      </div>
-      <div class="search-wrap">
-        <Search :size="14" class="search-ico" />
-        <input
-          v-model="query"
-          type="text"
-          class="search-input"
-          :placeholder="labels.filterByName"
-        />
-      </div>
-    </header>
+    <TSectionHeader
+      :eyebrow="labels.categories"
+      :title="labels.whereThings"
+      :subtitle="labels.incomeOnOneSide"
+    >
+      <template #actions>
+        <div class="search-wrap">
+          <Search :size="14" class="search-ico" />
+          <input
+            v-model="query"
+            type="text"
+            class="search-input"
+            :placeholder="labels.filterByName"
+          />
+        </div>
+      </template>
+    </TSectionHeader>
 
     <div class="grid">
       <div class="col col--income">
@@ -50,6 +49,8 @@
 import { ref, computed } from 'vue';
 import { Search } from 'lucide-vue-next';
 import CategoryRanking from './CategoryRanking.vue';
+import TSectionHeader from './TSectionHeader.vue';
+import { fill } from '../utils/fill';
 
 const props = defineProps({
   incomeCategories: { type: Array, required: true },
@@ -73,9 +74,6 @@ const props = defineProps({
 });
 
 defineEmits(['drill']);
-
-const fill = (template, vars) =>
-  Object.entries(vars).reduce((s, [k, v]) => s.replace(`{${k}}`, v), template);
 
 const query = ref('');
 

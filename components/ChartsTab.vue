@@ -1,20 +1,12 @@
 <template>
   <section class="charts-tab" tabindex="0" @keydown="onKey">
     <header class="charts-head">
-      <div class="chart-switch" role="tablist">
-        <button
-          v-for="(c, i) in charts"
-          :key="c.key"
-          class="switch-btn"
-          :class="{ 'switch-btn--active': i === currentIdx }"
-          role="tab"
-          :aria-selected="i === currentIdx"
-          @click="select(i)"
-        >
-          <component :is="c.icon" :size="14" />
-          <span>{{ c.label }}</span>
-        </button>
-      </div>
+      <TTabList
+        :model-value="charts[currentIdx]?.key"
+        :tabs="tabListItems"
+        variant="indicator"
+        @update:model-value="selectByKey"
+      />
       <div class="nav">
         <button class="nav-btn" :aria-label="labels.previousChart" @click="prev">
           <ChevronLeft :size="16" />
@@ -127,10 +119,23 @@ const props = defineProps({
   }
 });
 
-const fill = (template, vars) =>
-  Object.entries(vars).reduce((s, [k, v]) => s.replace(`{${k}}`, v), template);
+import TTabList from './TTabList.vue';
+import { fill } from '../utils/fill';
 
 const currentIdx = ref(0);
+
+const tabListItems = computed(() =>
+  charts.value.map((c) => ({
+    id: c.key,
+    label: c.label,
+    icon: c.icon
+  }))
+);
+
+const selectByKey = (key) => {
+  const idx = charts.value.findIndex((c) => c.key === key);
+  if (idx !== -1) select(idx);
+};
 
 const monthShort = (yyyyMm) => {
   if (!yyyyMm || typeof yyyyMm !== 'string') return '';

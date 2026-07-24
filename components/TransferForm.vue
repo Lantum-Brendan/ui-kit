@@ -1,30 +1,30 @@
 <template>
   <div class="transfer-form">
     <div class="form">
-      <div class="transfer-amount">
-        <span>{{ labels.amount }}</span>
+      <TFormField
+        :label="labels.amount"
+        :error="amountError ? labels.amountError : ''"
+        required
+      >
         <div class="amount-input-group">
-          <input
+          <TFormInput
             v-model="formAmount"
             type="number"
             :placeholder="labels.amountPlaceholder"
             min="1"
             step="any"
-            required
+            :error="amountError"
           />
-          <select v-model="selectedCurrency" class="amount-currency-select">
-            <option v-for="currency in availableCurrencies" :key="currency" :value="currency">
-              {{ currency }}
-            </option>
-          </select>
+          <TFormSelect
+            v-model="selectedCurrency"
+            :options="availableCurrencyOptions"
+            class="amount-currency-select"
+          />
         </div>
-        <div v-if="amountError" class="error-text">
-          {{ labels.amountError }}
-        </div>
-      </div>
+      </TFormField>
 
-      <div class="form-transaction">
-        <div class="transfer-field">
+      <TFormRow :cols="2">
+        <TFormField :error="fromWalletError ? labels.fromWalletError : ''">
           <SearchableDropdown
             v-model="fromWalletSearchQuery"
             :label="labels.fromWallet"
@@ -34,9 +34,9 @@
             @select="handleFromWalletSelect"
             @clear="fromWalletId = null"
           />
-        </div>
+        </TFormField>
 
-        <div class="transfer-field">
+        <TFormField :error="toWalletError ? labels.toWalletError : ''">
           <SearchableDropdown
             v-model="toWalletSearchQuery"
             :label="labels.toWallet"
@@ -46,43 +46,50 @@
             @select="handleToWalletSelect"
             @clear="toWalletId = null"
           />
-        </div>
-      </div>
+        </TFormField>
+      </TFormRow>
 
       <div v-if="showExchangeRate" class="exchange-rate-section">
-        <span>{{ labels.exchangeRate }}</span>
-        <div class="exchange-rate-input">
-          <span class="rate-label">1 {{ fromWalletCurrency }} =</span>
-          <input
-            v-model="exchangeRate"
-            type="number"
-            step="any"
-            min="0.0001"
-            :placeholder="labels.exchangeRatePlaceholder"
-          />
-          <span class="rate-label">{{ toWalletCurrency }}</span>
-        </div>
-        <div v-if="exchangeRateError" class="error-text">
-          {{ labels.exchangeRateError }}
-        </div>
-        <div v-if="convertedAmount" class="converted-amount">
-          {{ labels.recipientWillReceive }} {{ convertedAmount }} {{ toWalletCurrency }}
-        </div>
+        <TFormField
+          :label="labels.exchangeRate"
+          :error="exchangeRateError ? labels.exchangeRateError : ''"
+        >
+          <div class="exchange-rate-input">
+            <span class="rate-label">1 {{ fromWalletCurrency }} =</span>
+            <TFormInput
+              v-model="exchangeRate"
+              type="number"
+              step="any"
+              min="0.0001"
+              :placeholder="labels.exchangeRatePlaceholder"
+              :error="exchangeRateError"
+              size="sm"
+            />
+            <span class="rate-label">{{ toWalletCurrency }}</span>
+          </div>
+          <div v-if="convertedAmount" class="converted-amount">
+            {{ labels.recipientWillReceive }} {{ convertedAmount }} {{ toWalletCurrency }}
+          </div>
+        </TFormField>
       </div>
 
-      <div class="form-transaction">
-        <div class="transfer-field">
-          <span>{{ labels.transferDate }}</span>
-          <input v-model="formDate" type="date" required />
-          <div v-if="dateError" class="error-text">{{ labels.dateError }}</div>
-        </div>
+      <TFormRow :cols="2">
+        <TFormField
+          :label="labels.transferDate"
+          :error="dateError ? labels.dateError : ''"
+          required
+        >
+          <TFormInput v-model="formDate" type="date" :error="dateError" />
+        </TFormField>
 
-        <div class="transfer-field">
-          <span>{{ labels.transferTime }}</span>
-          <input v-model="formTime" type="time" required />
-          <div v-if="timeError" class="error-text">{{ labels.timeError }}</div>
-        </div>
-      </div>
+        <TFormField
+          :label="labels.transferTime"
+          :error="timeError ? labels.timeError : ''"
+          required
+        >
+          <TFormInput v-model="formTime" type="time" :error="timeError" />
+        </TFormField>
+      </TFormRow>
     </div>
 
     <TButton
@@ -102,6 +109,10 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue';
 import TButton from './TButton.vue';
+import TFormField from './TFormField.vue';
+import TFormRow from './TFormRow.vue';
+import TFormInput from './TFormInput.vue';
+import TFormSelect from './TFormSelect.vue';
 import SearchableDropdown from './SearchableDropdown.vue';
 import { ArrowsRightLeftIcon } from '@heroicons/vue/24/outline';
 
@@ -120,7 +131,7 @@ const props = defineProps({
   },
   formatWalletName: {
     type: Function,
-    default: (w) => w.name
+    default: (w: any) => w.name
   },
   labels: {
     type: Object,
@@ -171,7 +182,7 @@ const exchangeRateError = ref(false);
 
 const availableCurrencies = computed(() => {
   const currencies = new Set(['XAF', 'USD', 'EUR', 'GBP', 'NGN']);
-  props.wallets.forEach((wallet) => {
+  (props.wallets as any[]).forEach((wallet) => {
     if (wallet.currency) {
       currencies.add(wallet.currency);
     }
@@ -179,8 +190,12 @@ const availableCurrencies = computed(() => {
   return Array.from(currencies).sort();
 });
 
+const availableCurrencyOptions = computed(() =>
+  availableCurrencies.value.map((c) => ({ label: c, value: c }))
+);
+
 const fromWalletOptions = computed(() => {
-  return props.wallets
+  return (props.wallets as any[])
     .filter((w) => w.id !== toWalletId.value)
     .map((w) => ({
       ...w,
@@ -190,7 +205,7 @@ const fromWalletOptions = computed(() => {
 });
 
 const toWalletOptions = computed(() => {
-  return props.wallets
+  return (props.wallets as any[])
     .filter((w) => w.id !== fromWalletId.value)
     .map((w) => ({
       ...w,
@@ -200,12 +215,12 @@ const toWalletOptions = computed(() => {
 });
 
 const fromWalletCurrency = computed(() => {
-  const wallet = props.wallets.find((w) => w.id === fromWalletId.value);
+  const wallet = (props.wallets as any[]).find((w) => w.id === fromWalletId.value);
   return wallet?.currency || selectedCurrency.value;
 });
 
 const toWalletCurrency = computed(() => {
-  const wallet = props.wallets.find((w) => w.id === toWalletId.value);
+  const wallet = (props.wallets as any[]).find((w) => w.id === toWalletId.value);
   return wallet?.currency || selectedCurrency.value;
 });
 
@@ -264,11 +279,7 @@ function validateRequiredFields(): boolean {
 }
 
 function onSubmit() {
-  if (props.isSubmitting) {
-    return;
-  }
-
-  if (!validateRequiredFields()) {
+  if (props.isSubmitting || !validateRequiredFields()) {
     return;
   }
 
@@ -312,85 +323,13 @@ function onSubmit() {
   gap: 1rem;
 }
 
-.transfer-amount {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-
-  > span {
-    font-weight: $font-medium;
-  }
-}
-
-.transfer-field {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-
-  > span {
-    font-weight: $font-medium;
-  }
-
-  input[type='date'],
-  input[type='time'] {
-    padding: 12px;
-    border: 1px solid $border-color;
-    border-radius: $radius-lg;
-    font-size: 16px;
-    width: 100%;
-    height: 50px;
-    background: $bg-white;
-    color: $text-primary;
-
-    &:focus {
-      border-color: $primary;
-      outline: none;
-    }
-  }
-}
-
 .amount-input-group {
   display: flex;
   gap: 0.5rem;
 
-  input {
-    flex: 1;
-    width: 100%;
-    height: 50px;
-    border-radius: $radius-lg;
-    padding: 12px;
-    border: 1px solid $border-color;
-    background: $bg-white;
-    color: $text-primary;
-
-    &:focus {
-      border-color: $primary;
-      outline: none;
-    }
-  }
-
   .amount-currency-select {
-    width: 80px;
-    height: 50px;
-    background-color: $bg-light;
-    border-radius: $radius-lg;
-    font-weight: $font-normal;
-    font-size: $font-size-sm;
-    line-height: 100%;
-    border: 1px solid $border-color;
-    cursor: pointer;
-    padding: 0 8px;
-    appearance: none;
-    color: $text-primary;
-    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e");
-    background-position: right 8px center;
-    background-repeat: no-repeat;
-    background-size: 16px;
-
-    &:focus {
-      border-color: $primary;
-      outline: none;
-    }
+    width: 90px;
+    flex-shrink: 0;
   }
 }
 
@@ -402,11 +341,6 @@ function onSubmit() {
   background: $bg-slate;
   border-radius: $radius-lg;
   border: 1px solid $border-color;
-
-  > span {
-    font-weight: $font-medium;
-    color: $text-primary;
-  }
 }
 
 .exchange-rate-input {
@@ -414,26 +348,10 @@ function onSubmit() {
   align-items: center;
   gap: 0.5rem;
 
-  input {
-    flex: 1;
-    max-width: 150px;
-    padding: 10px 12px;
-    height: 44px;
-    border: 1px solid $border-color;
-    border-radius: $radius-lg;
-    font-size: 16px;
-    color: $text-primary;
-    background: $bg-white;
-
-    &:focus {
-      border-color: $primary;
-      outline: none;
-    }
-  }
-
   .rate-label {
     color: $text-secondary;
     font-size: 14px;
+    white-space: nowrap;
   }
 }
 
@@ -441,6 +359,7 @@ function onSubmit() {
   font-size: 14px;
   color: $primary;
   font-weight: $font-medium;
+  margin-top: 4px;
 }
 
 .submit-button {
@@ -450,11 +369,5 @@ function onSubmit() {
   @media (max-width: $breakpoint-sm) {
     width: 100%;
   }
-}
-
-.optional-label {
-  font-weight: $font-normal;
-  color: $text-muted;
-  font-size: $font-size-sm;
 }
 </style>

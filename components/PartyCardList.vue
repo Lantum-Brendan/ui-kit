@@ -1,20 +1,13 @@
 <template>
   <div class="party-card-list">
-    <div class="list-header">
-      <div class="header-row">
-        <h2 class="page-title">{{ labels.allParties }}</h2>
-        <div class="search-filter-section">
-          <SearchInput v-model="searchQuery" :placeholder="labels.search" />
-          <div class="filter-container">
-            <select v-model="selectedFilter" class="filter-dropdown" @change="handleFilter">
-              <option value="all">{{ labels.all }}</option>
-              <option value="individual">{{ labels.individual }}</option>
-              <option value="company">{{ labels.company }}</option>
-            </select>
-          </div>
-        </div>
-      </div>
-    </div>
+    <TListHeader :title="labels.allParties">
+      <SearchInput v-model="searchQuery" :placeholder="labels.search" />
+      <select v-model="selectedFilter" class="filter-dropdown" @change="handleFilter">
+        <option value="all">{{ labels.all }}</option>
+        <option value="individual">{{ labels.individual }}</option>
+        <option value="company">{{ labels.company }}</option>
+      </select>
+    </TListHeader>
 
     <div class="cards-grid">
       <PartyCard
@@ -28,14 +21,10 @@
       />
     </div>
 
-    <div v-if="filteredParties.length === 0" class="empty-state">
-      <p v-if="parties.length === 0">
-        {{ labels.noParties }}
-      </p>
-      <p v-else>
-        {{ labels.noMatch }}
-      </p>
-    </div>
+    <TEmptyState
+      v-if="filteredParties.length === 0"
+      :description="parties.length === 0 ? labels.noParties : labels.noMatch"
+    />
   </div>
 </template>
 
@@ -43,6 +32,8 @@
 import { ref, computed } from 'vue';
 import SearchInput from './SearchInput.vue';
 import PartyCard from './PartyCard.vue';
+import TListHeader from './TListHeader.vue';
+import TEmptyState from './TEmptyState.vue';
 
 const props = defineProps({
   parties: {

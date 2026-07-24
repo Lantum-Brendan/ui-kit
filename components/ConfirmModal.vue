@@ -1,37 +1,31 @@
 <template>
-  <div v-if="isOpen" class="modal-overlay" @click="handleCancel">
-    <div class="modal-content" @click.stop>
-      <div class="modal-header">
-        <h3 class="modal-title">{{ title }}</h3>
-        <button class="close-button" @click="handleCancel">
-          <XIcon />
-        </button>
+  <TModal :model-value="isOpen" size="sm" @close="handleCancel">
+    <TModalHeader :title="title" @close="handleCancel" />
+    <TModalBody>
+      <div class="icon-container" :class="`type-${type}`">
+        <AlertTriangleIcon v-if="type === 'warning'" />
+        <TrashIcon v-else-if="type === 'danger'" />
+        <InfoIcon v-else />
       </div>
-
-      <div class="modal-body">
-        <div class="icon-container" :class="`type-${type}`">
-          <AlertTriangleIcon v-if="type === 'warning'" />
-          <TrashIcon v-else-if="type === 'danger'" />
-          <InfoIcon v-else />
-        </div>
-        <p class="message">{{ message }}</p>
-      </div>
-
-      <div class="modal-actions">
-        <button class="cancel-button" @click="handleCancel">
-          {{ cancelText || labels.cancel }}
-        </button>
-        <button class="confirm-button" :class="`type-${type}`" @click="handleConfirm">
-          {{ confirmText || labels.confirm }}
-        </button>
-      </div>
-    </div>
-  </div>
+      <p class="message">{{ message }}</p>
+    </TModalBody>
+    <TModalFooter align="right">
+      <button class="cancel-button" @click="handleCancel">
+        {{ cancelText || labels.cancel }}
+      </button>
+      <button class="confirm-button" :class="`type-${type}`" @click="handleConfirm">
+        {{ confirmText || labels.confirm }}
+      </button>
+    </TModalFooter>
+  </TModal>
 </template>
 
 <script setup>
+import TModal from './TModal.vue';
+import TModalHeader from './TModalHeader.vue';
+import TModalBody from './TModalBody.vue';
+import TModalFooter from './TModalFooter.vue';
 import {
-  X as XIcon,
   AlertTriangle as AlertTriangleIcon,
   Trash as TrashIcon,
   Info as InfoIcon
@@ -86,81 +80,6 @@ const handleCancel = () => {
 <style lang="scss" scoped>
 @use '../assets/scss/_vars.scss' as *;
 
-.modal-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
-  padding: 1rem;
-}
-
-.modal-content {
-  background: $bg-white;
-  border-radius: $radius-xl;
-  max-width: 400px;
-  width: 100%;
-  box-shadow:
-    0 20px 25px -5px rgba(0, 0, 0, 0.1),
-    0 10px 10px -5px rgba(0, 0, 0, 0.04);
-  animation: modalEnter 0.2s ease-out;
-}
-
-@keyframes modalEnter {
-  from {
-    opacity: 0;
-    transform: scale(0.95) translateY(-10px);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1) translateY(0);
-  }
-}
-
-.modal-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 1.5rem 1.5rem 0 1.5rem;
-}
-
-.modal-title {
-  font-size: 1.25rem;
-  font-weight: 600;
-  color: $text-primary;
-  margin: 0;
-}
-
-.close-button {
-  background: none;
-  border: none;
-  color: $text-secondary;
-  cursor: pointer;
-  padding: 0.25rem;
-  border-radius: $radius-sm;
-  transition: all 0.2s ease;
-
-  &:hover {
-    background: $bg-light;
-    color: $text-primary;
-  }
-
-  svg {
-    width: 20px;
-    height: 20px;
-  }
-}
-
-.modal-body {
-  padding: 1.5rem;
-  text-align: center;
-}
-
 .icon-container {
   width: 48px;
   height: 48px;
@@ -196,13 +115,7 @@ const handleCancel = () => {
   font-size: 1rem;
   line-height: 1.5;
   margin: 0;
-}
-
-.modal-actions {
-  display: flex;
-  gap: 0.75rem;
-  padding: 0 1.5rem 1.5rem 1.5rem;
-  justify-content: flex-end;
+  text-align: center;
 }
 
 .cancel-button,
@@ -260,36 +173,6 @@ const handleCancel = () => {
     &:hover {
       background: $primary-dark;
       border-color: $primary-dark;
-    }
-  }
-}
-
-@media (max-width: $breakpoint-sm) {
-  .modal-content {
-    margin: 1rem;
-    max-width: calc(100vw - 2rem);
-  }
-
-  .modal-header {
-    padding: 1rem 1rem 0 1rem;
-  }
-
-  .modal-title {
-    font-size: 1.125rem;
-  }
-
-  .modal-body {
-    padding: 1rem;
-  }
-
-  .modal-actions {
-    padding: 0 1rem 1rem 1rem;
-    flex-direction: column-reverse;
-
-    .cancel-button,
-    .confirm-button {
-      width: 100%;
-      justify-content: center;
     }
   }
 }

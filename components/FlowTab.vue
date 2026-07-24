@@ -1,14 +1,10 @@
 <template>
   <section class="flow-tab">
-    <header class="tab-header">
-      <div>
-        <p class="eyebrow">{{ labels.flow }}</p>
-        <h2 class="title">{{ labels.howMoneyMoved }}</h2>
-        <p class="sub">
-          {{ labels.incomeOnLeft }}
-        </p>
-      </div>
-    </header>
+    <TSectionHeader
+      :eyebrow="labels.flow"
+      :title="labels.howMoneyMoved"
+      :subtitle="labels.incomeOnLeft"
+    />
 
     <div class="summary-strip">
       <article class="sum sum--in">
@@ -74,6 +70,7 @@
 <script setup>
 import { ArrowDownLeft, ArrowUpRight, PiggyBank } from 'lucide-vue-next';
 import SankeyFlow from './SankeyFlow.vue';
+import TSectionHeader from './TSectionHeader.vue';
 
 const props = defineProps({
   flow: { type: Object, required: true },

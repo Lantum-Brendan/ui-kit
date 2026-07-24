@@ -1,20 +1,14 @@
 <template>
   <div class="table-container">
-    <div class="table-heading">
-      <h1 class="table-heading-text">{{ labels.allTransactions }}</h1>
-      <div class="input-controls">
-        <SearchInput
-          :model-value="searchQuery"
-          :placeholder="labels.search"
-          :debounce="0"
-          @update:model-value="$emit('update:searchQuery', $event)"
-        />
-        <button class="filter-toggle-btn" @click="$emit('toggle-filters')">
-          <FunnelIcon class="filter-toggle-icon" />
-          <span v-if="activeFilterCount" class="filter-count-badge">{{ activeFilterCount }}</span>
-        </button>
-      </div>
-    </div>
+    <TListHeader :title="labels.allTransactions">
+      <SearchInput
+        :model-value="searchQuery"
+        :placeholder="labels.search"
+        :debounce="0"
+        @update:model-value="$emit('update:searchQuery', $event)"
+      />
+      <TFilterToggle :active-count="activeFilterCount" @click="$emit('toggle-filters')" />
+    </TListHeader>
 
     <div class="table-wrapper">
       <div class="table">
@@ -100,44 +94,14 @@
             </tr>
             <tr class="pagination-row">
               <td colspan="6">
-                <div class="pagination-container">
-                  <div class="pagination-controls">
-                    <button
-                      class="pagination-btn"
-                      :disabled="currentPage === 1"
-                      @click="$emit('page-change', currentPage - 1)"
-                    >
-                      {{ labels.previous }}
-                    </button>
-                    <button
-                      v-for="page in visiblePages"
-                      :key="page"
-                      class="pagination-btn"
-                      :class="{ active: page === currentPage }"
-                      @click="$emit('page-change', page)"
-                    >
-                      {{ page }}
-                    </button>
-                    <button
-                      class="pagination-btn"
-                      :disabled="currentPage === pagesTotal"
-                      @click="$emit('page-change', currentPage + 1)"
-                    >
-                      {{ labels.next }}
-                    </button>
-                  </div>
-                  <div class="pagination-info">
-                    <span class="entries-text">
-                      {{
-                        fill(labels.showingEntries, {
-                          start: startEntry,
-                          end: endEntry,
-                          total: totalEntries
-                        })
-                      }}
-                    </span>
-                  </div>
-                </div>
+                <TPagination
+                  :current-page="currentPage"
+                  :total-pages="pagesTotal"
+                  :total-entries="computedTotalEntries"
+                  :items-per-page="itemsPerPage"
+                  :entry-text="fill(labels.showingEntries, { start: startEntry, end: endEntry, total: computedTotalEntries })"
+                  @page-change="$emit('page-change', $event)"
+                />
               </td>
             </tr>
           </tfoot>
@@ -149,11 +113,12 @@
 
 <script setup>
 import { computed } from 'vue';
-import { PencilSquareIcon, TrashIcon, ArrowPathIcon, FunnelIcon } from '@heroicons/vue/24/outline';
+import { PencilSquareIcon, TrashIcon, ArrowPathIcon } from '@heroicons/vue/24/outline';
 import SearchInput from './SearchInput.vue';
-
-const fill = (t, v) =>
-  Object.entries(v).reduce((s, [k, val]) => s.replace(`{${k}}`, val), t);
+import TListHeader from './TListHeader.vue';
+import TFilterToggle from './TFilterToggle.vue';
+import TPagination from './TPagination.vue';
+import { fill } from '../utils/fill';
 
 const props = defineProps({
   transactions: { type: Array, default: () => [] },
@@ -276,23 +241,7 @@ const endEntry = computed(() => {
   return Math.min(end, computedTotalEntries.value);
 });
 
-const visiblePages = computed(() => {
-  const pages = [];
-  const maxVisible = 5;
-  const total = pagesTotal.value;
-  let start = Math.max(1, props.currentPage - Math.floor(maxVisible / 2));
-  const end = Math.min(total, start + maxVisible - 1);
-
-  if (end - start + 1 < maxVisible) {
-    start = Math.max(1, end - maxVisible + 1);
-  }
-
-  for (let i = start; i <= end; i++) {
-    pages.push(i);
-  }
-
-  return pages;
-});
+// visiblePages is now handled by TPagination
 
 const formatDate = (txn) => {
   const iso = txn?.date || '';

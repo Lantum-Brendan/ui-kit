@@ -1,87 +1,73 @@
 <template>
-  <div v-if="isOpen" class="modal-overlay" @click="handleCancel">
-    <div class="modal-content" @click.stop>
-      <div class="modal-header">
-        <h3 class="modal-title">
+  <TModal :model-value="isOpen" size="md" @close="handleCancel">
+    <TModalHeader
+      :title="isCurrentlyRecurring ? labels.updateRecurrence : labels.makeRecurring"
+      @close="handleCancel"
+    />
+    <TModalBody>
+      <div v-if="isCurrentlyRecurring" class="current-status">
+        <RefreshCwIcon class="status-icon" />
+        <span class="status-text">
+          {{ labels.repeatEvery }} {{ transaction?.recurrenceInterval || 1 }}
+          {{ periodLabel(transaction?.recurrencePeriod) }}
+        </span>
+      </div>
+
+      <form id="recurring-form" @submit.prevent="handleSave">
+        <TFormField :label="labels.recurrencePeriod">
+          <TFormSelect v-model="form.period" :options="periodOptions" />
+        </TFormField>
+
+        <TFormField :label="labels.repeatEvery">
+          <div class="interval-row">
+            <TFormInput v-model.number="form.interval" type="number" min="1" required />
+            <span class="interval-unit">{{ unitLabel }}</span>
+          </div>
+        </TFormField>
+
+        <TFormField :label="labels.endDate">
+          <div class="end-date-row">
+            <label class="checkbox-label">
+              <input v-model="hasEndDate" type="checkbox" />
+              <span>{{ labels.noEndDate }}</span>
+            </label>
+            <TFormInput v-if="!hasEndDate" v-model="form.endsAt" type="date" />
+          </div>
+        </TFormField>
+      </form>
+    </TModalBody>
+    <TModalFooter align="between">
+      <button
+        v-if="isCurrentlyRecurring"
+        type="button"
+        class="btn btn-danger"
+        @click="handleRemove"
+      >
+        {{ labels.removeRecurrence }}
+      </button>
+      <div v-else></div>
+      <div class="actions-right">
+        <button type="button" class="btn btn-secondary" @click="handleCancel">
+          {{ labels.cancel }}
+        </button>
+        <button type="submit" form="recurring-form" class="btn btn-primary">
           {{ isCurrentlyRecurring ? labels.updateRecurrence : labels.makeRecurring }}
-        </h3>
-        <button class="close-button" @click="handleCancel">
-          <XIcon />
         </button>
       </div>
-
-      <div class="modal-body">
-        <div v-if="isCurrentlyRecurring" class="current-status">
-          <RefreshCwIcon class="status-icon" />
-          <span class="status-text">
-            {{ labels.repeatEvery }} {{ transaction?.recurrenceInterval || 1 }}
-            {{ periodLabel(transaction?.recurrencePeriod) }}
-          </span>
-        </div>
-
-        <form @submit.prevent="handleSave">
-          <div class="form-group">
-            <label class="form-label">{{ labels.recurrencePeriod }}</label>
-            <select v-model="form.period" class="form-input">
-              <option value="daily">{{ labels.daily }}</option>
-              <option value="weekly">{{ labels.weekly }}</option>
-              <option value="monthly">{{ labels.monthly }}</option>
-              <option value="yearly">{{ labels.yearly }}</option>
-            </select>
-          </div>
-
-          <div class="form-group">
-            <label class="form-label">{{ labels.repeatEvery }}</label>
-            <div class="interval-row">
-              <input
-                v-model.number="form.interval"
-                type="number"
-                class="form-input interval-input"
-                min="1"
-                required
-              />
-              <span class="interval-unit">{{ unitLabel }}</span>
-            </div>
-          </div>
-
-          <div class="form-group">
-            <label class="form-label">{{ labels.endDate }}</label>
-            <div class="end-date-row">
-              <label class="checkbox-label">
-                <input v-model="hasEndDate" type="checkbox" />
-                <span>{{ labels.noEndDate }}</span>
-              </label>
-              <input v-if="!hasEndDate" v-model="form.endsAt" type="date" class="form-input" />
-            </div>
-          </div>
-
-          <div class="form-actions">
-            <button
-              v-if="isCurrentlyRecurring"
-              type="button"
-              class="btn btn-danger"
-              @click="handleRemove"
-            >
-              {{ labels.removeRecurrence }}
-            </button>
-            <div class="actions-right">
-              <button type="button" class="btn btn-secondary" @click="handleCancel">
-                {{ labels.cancel }}
-              </button>
-              <button type="submit" class="btn btn-primary">
-                {{ isCurrentlyRecurring ? labels.updateRecurrence : labels.makeRecurring }}
-              </button>
-            </div>
-          </div>
-        </form>
-      </div>
-    </div>
-  </div>
+    </TModalFooter>
+  </TModal>
 </template>
 
 <script setup>
 import { ref, computed, watch } from 'vue';
-import { X as XIcon, RefreshCw as RefreshCwIcon } from 'lucide-vue-next';
+import TModal from './TModal.vue';
+import TModalHeader from './TModalHeader.vue';
+import TModalBody from './TModalBody.vue';
+import TModalFooter from './TModalFooter.vue';
+import TFormField from './TFormField.vue';
+import TFormInput from './TFormInput.vue';
+import TFormSelect from './TFormSelect.vue';
+import { RefreshCw as RefreshCwIcon } from 'lucide-vue-next';
 
 const props = defineProps({
   isOpen: {
@@ -119,58 +105,65 @@ const form = ref({
   endsAt: ''
 });
 
-const hasEndDate = ref(true); // true = no end date (checkbox checked)
+const hasEndDate = ref(true);
+
+const periodOptions = computed(() => [
+  { label: props.labels.daily, value: 'daily' },
+  { label: props.labels.weekly, value: 'weekly' },
+  { label: props.labels.monthly, value: 'monthly' },
+  { label: props.labels.yearly, value: 'yearly' }
+]);
 
 const isCurrentlyRecurring = computed(() => {
-  return props.transaction?.isRecurring && props.transaction?.recurrencePeriod;
+  return props.transaction && (props.transaction.isRecurring || props.transaction.is_recurring);
 });
 
 const unitLabel = computed(() => {
-  return periodLabel(form.value.period);
+  const p = form.value.period;
+  const count = form.value.interval || 1;
+  if (p === 'daily') return count === 1 ? 'day' : 'days';
+  if (p === 'weekly') return count === 1 ? 'week' : 'weeks';
+  if (p === 'monthly') return count === 1 ? 'month' : 'months';
+  if (p === 'yearly') return count === 1 ? 'year' : 'years';
+  return '';
 });
 
-function periodLabel(period) {
-  const labels = {
-    daily: props.labels.dailyUnit,
-    weekly: props.labels.weeklyUnit,
-    monthly: props.labels.monthlyUnit,
-    yearly: props.labels.yearlyUnit
-  };
-  return labels[period] || period || '';
+function periodLabel(p) {
+  if (p === 'daily') return props.labels.daily;
+  if (p === 'weekly') return props.labels.weekly;
+  if (p === 'monthly') return props.labels.monthly;
+  if (p === 'yearly') return props.labels.yearly;
+  return p;
 }
 
 watch(
-  () => props.isOpen,
-  (open) => {
-    if (open && props.transaction) {
-      if (isCurrentlyRecurring.value) {
-        form.value.period = props.transaction.recurrencePeriod || 'monthly';
-        form.value.interval = props.transaction.recurrenceInterval || 1;
-        if (props.transaction.recurrenceEndsAt) {
-          hasEndDate.value = false;
-          form.value.endsAt = props.transaction.recurrenceEndsAt.split('T')[0];
-        } else {
-          hasEndDate.value = true;
-          form.value.endsAt = '';
-        }
+  () => props.transaction,
+  (txn) => {
+    if (txn && (txn.isRecurring || txn.is_recurring)) {
+      form.value.period = txn.recurrencePeriod || txn.recurrence_period || 'monthly';
+      form.value.interval = txn.recurrenceInterval || txn.recurrence_interval || 1;
+      const ends = txn.recurrenceEndsAt || txn.recurrence_ends_at;
+      if (ends) {
+        hasEndDate.value = false;
+        form.value.endsAt = ends.slice(0, 10);
       } else {
-        form.value.period = 'monthly';
-        form.value.interval = 1;
         hasEndDate.value = true;
         form.value.endsAt = '';
       }
+    } else {
+      form.value = { period: 'monthly', interval: 1, endsAt: '' };
+      hasEndDate.value = true;
     }
-  }
+  },
+  { immediate: true }
 );
 
 function handleSave() {
-  const config = {
-    is_recurring: true,
-    recurrence_period: form.value.period,
-    recurrence_interval: form.value.interval,
-    recurrence_ends_at: hasEndDate.value ? null : form.value.endsAt || null
-  };
-  emit('save', config);
+  emit('save', {
+    period: form.value.period,
+    interval: form.value.interval,
+    endsAt: hasEndDate.value ? null : form.value.endsAt || null
+  });
 }
 
 function handleRemove() {
@@ -185,138 +178,27 @@ function handleCancel() {
 <style lang="scss" scoped>
 @use '../assets/scss/_vars.scss' as *;
 
-.modal-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
-  padding: 1rem;
-}
-
-.modal-content {
-  background: $bg-white;
-  border-radius: $radius-xl;
-  max-width: 480px;
-  width: 100%;
-  box-shadow:
-    0 20px 25px -5px rgba(0, 0, 0, 0.1),
-    0 10px 10px -5px rgba(0, 0, 0, 0.04);
-  animation: modalEnter 0.2s ease-out;
-}
-
-@keyframes modalEnter {
-  from {
-    opacity: 0;
-    transform: scale(0.95) translateY(-10px);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1) translateY(0);
-  }
-}
-
-.modal-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 1.5rem 1.5rem 0 1.5rem;
-}
-
-.modal-title {
-  font-size: 1.25rem;
-  font-weight: 600;
-  color: $text-primary;
-  margin: 0;
-}
-
-.close-button {
-  background: none;
-  border: none;
-  color: $text-secondary;
-  cursor: pointer;
-  padding: 0.25rem;
-  border-radius: $radius-sm;
-  transition: all 0.2s ease;
-
-  &:hover {
-    background: $bg-light;
-    color: $text-primary;
-  }
-
-  svg {
-    width: 20px;
-    height: 20px;
-  }
-}
-
-.modal-body {
-  padding: 1.5rem;
-}
-
 .current-status {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  padding: 0.75rem 1rem;
-  background: rgba(var(--color-primary-rgb), 0.1);
-  border-radius: $radius-md;
-  margin-bottom: 1.25rem;
-
-  .status-icon {
-    width: 16px;
-    height: 16px;
-    color: $primary;
-    flex-shrink: 0;
-  }
-
-  .status-text {
-    font-size: $font-size-sm;
-    color: $primary;
-  }
-}
-
-.form-group {
-  margin-bottom: 1rem;
-}
-
-.form-label {
-  display: block;
+  gap: $spacing-2;
+  padding: $spacing-3;
+  background: $bg-slate;
+  border-radius: $radius-lg;
+  margin-bottom: $spacing-4;
+  color: $primary;
   font-size: $font-size-sm;
-  font-weight: 500;
-  color: $text-primary;
-  margin-bottom: 0.5rem;
 }
 
-.form-input {
-  width: 100%;
-  padding: 0.625rem 0.75rem;
-  border: 1px solid $border-light;
-  border-radius: $radius-md;
-  font-size: $font-size-sm;
-  transition: border-color 0.2s;
-  background: $bg-white;
-
-  &:focus {
-    outline: none;
-    border-color: $primary;
-  }
+.status-icon {
+  width: 16px;
+  height: 16px;
 }
 
 .interval-row {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
-
-  .interval-input {
-    width: 100px;
-    flex-shrink: 0;
-  }
+  gap: $spacing-2;
 
   .interval-unit {
     font-size: $font-size-sm;
@@ -327,119 +209,44 @@ function handleCancel() {
 .end-date-row {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: $spacing-2;
 }
 
 .checkbox-label {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  cursor: pointer;
+  gap: $spacing-2;
   font-size: $font-size-sm;
-  color: $text-secondary;
-
-  input[type='checkbox'] {
-    width: 16px;
-    height: 16px;
-    cursor: pointer;
-  }
-}
-
-.form-actions {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-top: 1.5rem;
-  padding-top: 1rem;
-  border-top: 1px solid $border-light;
+  cursor: pointer;
 }
 
 .actions-right {
   display: flex;
-  gap: 0.75rem;
-  margin-left: auto;
+  gap: $spacing-2;
 }
 
 .btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
   padding: 0.5rem 1rem;
   border-radius: $radius-md;
   font-weight: 500;
   cursor: pointer;
-  border: 1px solid;
-  transition: all 0.2s ease;
+  border: 1px solid transparent;
   font-size: 0.875rem;
-  min-width: 80px;
-  justify-content: center;
-}
 
-.btn-secondary {
-  background: $bg-white;
-  color: $text-secondary;
-  border-color: $border-light;
-
-  &:hover {
-    background: $bg-light;
-    border-color: $border-medium;
-  }
-}
-
-.btn-primary {
-  background: $primary;
-  color: white;
-  border-color: $primary;
-
-  &:hover {
-    background: $primary-dark;
-    border-color: $primary-dark;
-  }
-}
-
-.btn-danger {
-  background: transparent;
-  color: $error-color;
-  border-color: $error-color;
-
-  &:hover {
-    background: rgba(var(--color-error-rgb), 0.1);
-  }
-}
-
-@media (max-width: $breakpoint-sm) {
-  .modal-content {
-    margin: 1rem;
-    max-width: calc(100vw - 2rem);
+  &-secondary {
+    background: $bg-white;
+    color: $text-secondary;
+    border-color: $border-light;
   }
 
-  .modal-header {
-    padding: 1rem 1rem 0 1rem;
+  &-primary {
+    background: $primary;
+    color: $text-inverse;
   }
 
-  .modal-title {
-    font-size: 1.125rem;
-  }
-
-  .modal-body {
-    padding: 1rem;
-  }
-
-  .form-actions {
-    flex-direction: column;
-    gap: 0.75rem;
-
-    .actions-right {
-      width: 100%;
-    }
-
-    .btn {
-      flex: 1;
-    }
-
-    .btn-danger {
-      width: 100%;
-    }
+  &-danger {
+    background: $error-color;
+    color: $text-inverse;
   }
 }
 </style>

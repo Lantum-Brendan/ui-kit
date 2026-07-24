@@ -1,28 +1,26 @@
 <template>
-  <form class="card-form" @submit.prevent="handleSubmit">
-    <div class="form-header">
-      <h2>{{ isEditing ? labels.editCategory : labels.createCategory }}</h2>
-      <button type="button" class="close-btn" @click="handleClose">
-        <X />
-      </button>
-    </div>
-
-    <div class="form-group">
-      <label for="category-name" class="form-label">{{ labels.categoryName }}</label>
+  <TForm
+    :title="isEditing ? labels.editCategory : labels.createCategory"
+    :api-error="props.apiError"
+    :is-submitting="props.isSubmitting"
+    :submit-label="isEditing ? labels.updateCategory : labels.createCategory"
+    :cancel-label="labels.cancel"
+    @submit="handleSubmit"
+    @close="handleClose"
+  >
+    <TFormField
+      :label="labels.categoryName"
+      field-id="category-name"
+      :error="nameError ? labels.categoryNameRequired : ''"
+      required
+    >
       <div class="name-icon-row">
-        <div class="name-col">
-          <input
-            id="category-name"
-            v-model="form.name"
-            type="text"
-            class="form-input"
-            :class="{ error: nameError || props.apiError }"
-            :placeholder="labels.enterCategoryName"
-            required
-          />
-          <div v-if="nameError" class="error-text">{{ labels.categoryNameRequired }}</div>
-          <div v-if="props.apiError" class="error-text">{{ props.apiError }}</div>
-        </div>
+        <TFormInput
+          id="category-name"
+          v-model="form.name"
+          :placeholder="labels.enterCategoryName"
+          :error="nameError || !!props.apiError"
+        />
         <div class="icon-col">
           <button
             type="button"
@@ -44,56 +42,49 @@
       <div v-if="showIconPicker" class="icon-popover">
         <IconPicker v-model="form.icon" @update:model-value="onIconSelected" />
       </div>
-    </div>
+    </TFormField>
 
-    <div class="form-group">
-      <label for="category-type" class="form-label">{{ labels.categoryType }}</label>
-      <select
+    <TFormField
+      :label="labels.categoryType"
+      field-id="category-type"
+      :error="typeError ? labels.pleaseSelectType : ''"
+      required
+    >
+      <TFormSelect
         id="category-type"
         v-model="form.type"
-        class="form-select"
-        :class="{ error: typeError }"
-        required
-      >
-        <option value="">{{ labels.selectType }}</option>
-        <option value="income">{{ labels.income }}</option>
-        <option value="expense">{{ labels.expense }}</option>
-      </select>
-      <div v-if="typeError" class="error-text">{{ labels.pleaseSelectType }}</div>
-    </div>
+        :options="typeOptions"
+        :error="typeError"
+      />
+    </TFormField>
 
-    <div class="form-group">
-      <label for="category-description" class="form-label">{{ labels.categoryDescription }}</label>
-      <textarea
+    <TFormField
+      :label="labels.categoryDescription"
+      field-id="category-description"
+      :error="descriptionError ? labels.categoryDescriptionRequired : ''"
+      required
+    >
+      <TFormTextarea
         id="category-description"
         v-model="form.description"
-        class="form-textarea"
-        :class="{ error: descriptionError }"
         :placeholder="labels.typeCategoryDescription"
-        rows="5"
-        required
+        :rows="4"
+        :error="descriptionError"
       />
-      <div v-if="descriptionError" class="error-text">
-        {{ labels.categoryDescriptionRequired }}
-      </div>
-    </div>
-
-    <div class="form-actions">
-      <button type="button" class="btn btn-secondary" @click="handleClose">
-        {{ labels.cancel }}
-      </button>
-      <button type="submit" class="btn btn-primary" :disabled="props.isSubmitting">
-        {{ isEditing ? labels.updateCategory : labels.createCategory }}
-      </button>
-    </div>
-  </form>
+    </TFormField>
+  </TForm>
 </template>
 
 <script setup>
 import { ref, computed, watch } from 'vue';
+import TForm from './TForm.vue';
+import TFormField from './TFormField.vue';
+import TFormInput from './TFormInput.vue';
+import TFormSelect from './TFormSelect.vue';
+import TFormTextarea from './TFormTextarea.vue';
 import IconPicker from './IconPicker.vue';
-import * as lucideIcons from 'lucide-vue-next';
-import { ImagePlus, X } from 'lucide-vue-next';
+import { useLucideIcon } from '../composables/useLucideIcon';
+import { ImagePlus } from 'lucide-vue-next';
 
 const props = defineProps({
   pageName: {
@@ -149,22 +140,19 @@ const typeError = ref(false);
 const descriptionError = ref(false);
 const showIconPicker = ref(false);
 
-const selectedIconComponent = computed(() => {
-  const key = form.value.icon;
-  if (key && typeof lucideIcons[key] === 'function') {
-    return lucideIcons[key];
-  }
-  return null;
-});
-
+const selectedIconComponent = useLucideIcon(computed(() => form.value.icon));
 const isEditing = computed(() => !!props.editingItem);
 
-// Watch for editing item changes and populate form
+const typeOptions = computed(() => [
+  { label: props.labels.selectType, value: '' },
+  { label: props.labels.income, value: 'income' },
+  { label: props.labels.expense, value: 'expense' }
+]);
+
 watch(
   () => props.editingItem,
   (newEditingItem) => {
     if (newEditingItem) {
-      // Extract icon value - could be from icon.path, icon.content, or direct icon value
       let iconValue = '';
       if (newEditingItem.icon) {
         if (typeof newEditingItem.icon === 'string') {
@@ -199,25 +187,20 @@ function resetForm() {
 
 function validateForm() {
   let isValid = true;
-
-  // Reset errors
   nameError.value = false;
   typeError.value = false;
   descriptionError.value = false;
 
-  // Validate name
   if (!form.value.name || form.value.name.trim() === '') {
     nameError.value = true;
     isValid = false;
   }
 
-  // Validate type
   if (!form.value.type || form.value.type.trim() === '') {
     typeError.value = true;
     isValid = false;
   }
 
-  // Validate description
   if (!form.value.description || form.value.description.trim() === '') {
     descriptionError.value = true;
     isValid = false;
@@ -227,14 +210,7 @@ function validateForm() {
 }
 
 function handleSubmit() {
-  if (props.isSubmitting) {
-    return;
-  }
-
-  // Validate all fields
-  if (!validateForm()) {
-    return;
-  }
+  if (props.isSubmitting || !validateForm()) return;
 
   const formData = {
     name: form.value.name.trim(),
@@ -247,11 +223,10 @@ function handleSubmit() {
   }
 
   if (isEditing.value) {
-    const updatedItem = {
+    emit('updated', {
       id: props.editingItem.id,
       ...formData
-    };
-    emit('updated', updatedItem);
+    });
     return;
   }
 
@@ -270,4 +245,40 @@ function handleClose() {
 
 <style scoped lang="scss">
 @use '../assets/scss/_vars.scss' as *;
+
+.name-icon-row {
+  display: flex;
+  gap: $spacing-2;
+  align-items: center;
+}
+
+.icon-col {
+  flex-shrink: 0;
+}
+
+.icon-trigger {
+  width: 42px;
+  height: 42px;
+  border-radius: $radius-lg;
+  border: 1px solid $border-color;
+  background-color: $input-bg;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: $text-primary;
+
+  &:hover {
+    border-color: $primary;
+  }
+
+  &__icon {
+    width: 20px;
+    height: 20px;
+  }
+}
+
+.icon-popover {
+  margin-top: $spacing-2;
+}
 </style>

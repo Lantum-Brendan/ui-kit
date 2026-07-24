@@ -1,17 +1,12 @@
 <template>
   <div class="content-list-view">
-    <div class="section-header">
-      <div class="header-left">
-        <h1 class="section-title">{{ fill(labels.allItems, { items: labels.pageNamePlural }) }}</h1>
-      </div>
-      <div class="header-right">
-        <SearchInput
-          v-model="searchQuery"
-          :placeholder="fill(labels.searchItems, { items: labels.pageNamePlural.toLowerCase() })"
-        />
-        <ViewToggle v-model="currentView" />
-      </div>
-    </div>
+    <TListHeader :title="fill(labels.allItems, { items: labels.pageNamePlural })">
+      <SearchInput
+        v-model="searchQuery"
+        :placeholder="fill(labels.searchItems, { items: labels.pageNamePlural.toLowerCase() })"
+      />
+      <ViewToggle v-model="currentView" />
+    </TListHeader>
 
     <ContentTable
       v-if="currentView === 'table'"
@@ -48,49 +43,20 @@
         </slot>
       </div>
 
-      <div v-if="totalPages > 1" class="pagination-row">
-        <div class="pagination-controls">
-          <button
-            :disabled="currentPage === 1"
-            class="pagination-button"
-            :class="{ disabled: currentPage === 1 }"
-            @click="currentPage--"
-          >
-            &lt; {{ labels.prev }}
-          </button>
-
-          <button
-            v-for="page in visiblePages"
-            :key="page"
-            class="pagination-button"
-            :class="{
-              active: page === currentPage,
-              ellipsis: page === '...'
-            }"
-            @click="currentPage = typeof page === 'number' ? page : currentPage"
-          >
-            {{ page }}
-          </button>
-
-          <button
-            :disabled="currentPage === totalPages"
-            class="pagination-button"
-            :class="{ disabled: currentPage === totalPages }"
-            @click="currentPage++"
-          >
-            {{ labels.next }} &gt;
-          </button>
-        </div>
-
-        <div class="page-info">
-          <span>{{ labels.show }}</span>
-          <select v-model="perPage" class="per-page-select">
-            <option value="12">12</option>
-            <option value="24">24</option>
-            <option value="48">48</option>
-          </select>
-          <span>{{ labels.perPage }}</span>
-        </div>
+      <TPagination
+        v-if="totalPages > 1"
+        :current-page="currentPage"
+        :total-pages="totalPages"
+        @page-change="currentPage = $event"
+      />
+      <div class="page-info">
+        <span>{{ labels.show }}</span>
+        <select v-model="perPage" class="per-page-select">
+          <option value="12">12</option>
+          <option value="24">24</option>
+          <option value="48">48</option>
+        </select>
+        <span>{{ labels.perPage }}</span>
       </div>
     </div>
   </div>
@@ -102,8 +68,9 @@ import SearchInput from './SearchInput.vue';
 import ViewToggle from './ViewToggle.vue';
 import ContentTable from './ContentTable.vue';
 import ContentCardGrid from './ContentCardGrid.vue';
-
-const fill = (t, v) => Object.entries(v).reduce((s, [k, val]) => s.replace(`{${k}}`, val), t);
+import TListHeader from './TListHeader.vue';
+import TPagination from './TPagination.vue';
+import { fill } from '../utils/fill';
 
 const props = defineProps({
   entities: {
@@ -214,38 +181,7 @@ watch(perPage, () => {
   }
 });
 
-const visiblePages = computed(() => {
-  const total = totalPages.value;
-  const current = currentPage.value;
-  const pages = [];
-
-  if (total <= 7) {
-    for (let i = 1; i <= total; i++) {
-      pages.push(i);
-    }
-  } else {
-    pages.push(1);
-
-    if (current > 3) {
-      pages.push('...');
-    }
-
-    const start = Math.max(2, current - 1);
-    const end = Math.min(start + 2, total - 1);
-
-    for (let i = start; i <= end; i++) {
-      pages.push(i);
-    }
-
-    if (current < total - 2) {
-      pages.push('...');
-    }
-
-    pages.push(total);
-  }
-
-  return pages;
-});
+// visiblePages is now handled by TPagination
 </script>
 
 <style lang="scss" scoped>

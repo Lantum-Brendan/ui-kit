@@ -1,20 +1,14 @@
 <template>
   <div class="transactions-cards">
-    <div class="cards-heading">
-      <h1 class="cards-heading__text">{{ labels.allTransactions }}</h1>
-      <div class="input-controls">
-        <SearchInput
-          :model-value="searchQuery"
-          :placeholder="labels.search"
-          :debounce="0"
-          @update:model-value="$emit('update:searchQuery', $event)"
-        />
-        <button class="filter-toggle-btn" @click="$emit('toggle-filters')">
-          <FunnelIcon class="filter-toggle-icon" />
-          <span v-if="activeFilterCount" class="filter-count-badge">{{ activeFilterCount }}</span>
-        </button>
-      </div>
-    </div>
+    <TListHeader :title="labels.allTransactions">
+      <SearchInput
+        :model-value="searchQuery"
+        :placeholder="labels.search"
+        :debounce="0"
+        @update:model-value="$emit('update:searchQuery', $event)"
+      />
+      <TFilterToggle :active-count="activeFilterCount" @click="$emit('toggle-filters')" />
+    </TListHeader>
 
     <div class="cards-list">
       <div
@@ -72,39 +66,14 @@
       </div>
     </div>
 
-    <div class="pagination-container">
-      <div class="pagination-controls">
-        <button
-          class="pagination-btn"
-          :disabled="currentPage === 1"
-          @click="$emit('page-change', currentPage - 1)"
-        >
-          {{ labels.previous }}
-        </button>
-        <button
-          v-for="page in visiblePages"
-          :key="page"
-          class="pagination-btn"
-          :class="{ active: page === currentPage }"
-          @click="$emit('page-change', page)"
-        >
-          {{ page }}
-        </button>
-        <button
-          class="pagination-btn"
-          :disabled="currentPage === pagesTotal"
-          @click="$emit('page-change', currentPage + 1)"
-        >
-          {{ labels.next }}
-        </button>
-      </div>
-      <div class="pagination-info">
-        <span class="entries-text"
-          >{{ labels.showing }} {{ startEntry }}-{{ endEntry }} {{ labels.of }}
-          {{ totalEntriesComputed }} {{ labels.entries }}</span
-        >
-      </div>
-    </div>
+    <TPagination
+      :current-page="currentPage"
+      :total-pages="pagesTotal"
+      :total-entries="totalEntriesComputed"
+      :items-per-page="itemsPerPage"
+      :entry-text="`${labels.showing} ${startEntry}-${endEntry} ${labels.of} ${totalEntriesComputed} ${labels.entries}`"
+      @page-change="$emit('page-change', $event)"
+    />
   </div>
 </template>
 
@@ -116,10 +85,12 @@ import {
   CreditCardIcon,
   ArrowUpRightIcon,
   ArrowDownLeftIcon,
-  ArrowPathIcon,
-  FunnelIcon
+  ArrowPathIcon
 } from '@heroicons/vue/24/outline';
 import SearchInput from './SearchInput.vue';
+import TListHeader from './TListHeader.vue';
+import TFilterToggle from './TFilterToggle.vue';
+import TPagination from './TPagination.vue';
 
 const props = defineProps({
   transactions: { type: Array, default: () => [] },
@@ -174,16 +145,7 @@ const endEntry = computed(() => {
   return Math.min(end, totalEntriesComputed.value);
 });
 
-const visiblePages = computed(() => {
-  const pages = [];
-  const maxVisible = 5;
-  const total = pagesTotal.value;
-  let start = Math.max(1, props.currentPage - Math.floor(maxVisible / 2));
-  const end = Math.min(total, start + maxVisible - 1);
-  if (end - start + 1 < maxVisible) start = Math.max(1, end - maxVisible + 1);
-  for (let i = start; i <= end; i++) pages.push(i);
-  return pages;
-});
+// visiblePages is now handled by TPagination
 
 function isDefaultWallet(txn) {
   const dw = props.defaultWallet;

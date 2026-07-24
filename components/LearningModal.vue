@@ -1,32 +1,13 @@
 <template>
-  <div v-if="isOpen" class="modal-overlay" @click="closeModal" @keydown.esc="closeModal">
-    <div
-      class="modal-content"
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="modal-title"
-      @click.stop
-    >
-      <div class="modal-header">
-        <h2 id="modal-title" class="modal-title">💡 {{ labels.learnTrakli }}</h2>
-        <button class="close-btn" :aria-label="labels.closeModal" @click="closeModal">
-          <XMarkIcon class="close-icon" />
-        </button>
-      </div>
-
-      <div class="modal-body">
-        <div class="learning-tabs">
-          <button
-            v-for="tab in tabs"
-            :key="tab.id"
-            class="tab-button"
-            :class="{ active: activeTab === tab.id }"
-            @click="activeTab = tab.id"
-          >
-            <component :is="tab.icon" class="tab-icon" />
-            {{ tab.label }}
-          </button>
-        </div>
+  <TModal :model-value="isOpen" size="lg" @close="closeModal">
+    <TModalHeader :title="`💡 ${labels.learnTrakli}`" @close="closeModal" />
+    <TModalBody>
+      <TTabList
+        v-model="activeTab"
+        :tabs="tabListItems"
+        variant="indicator"
+        class="learning-tabs"
+      />
 
         <div class="tab-content">
           <div v-if="activeTab === 'concepts'" class="concepts-section">
@@ -90,15 +71,17 @@
             </div>
           </div>
         </div>
-      </div>
-    </div>
-  </div>
+    </TModalBody>
+  </TModal>
 </template>
 
 <script setup>
 import { ref, computed } from 'vue';
+import TModal from './TModal.vue';
+import TModalHeader from './TModalHeader.vue';
+import TModalBody from './TModalBody.vue';
+import TTabList from './TTabList.vue';
 import {
-  XMarkIcon,
   ChevronDownIcon,
   CreditCardIcon,
   TagIcon,

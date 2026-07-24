@@ -19,21 +19,13 @@
           </div>
         </div>
         <div class="card-actions">
-          <div class="action-menu-container" @click.stop>
-            <button class="action-menu" :title="moreActionsLabel" @click="toggleMenu(entity.id)">
-              <MoreVertical :size="16" />
-            </button>
-            <div v-if="openMenuId === entity.id" class="action-dropdown">
-              <button class="dropdown-item edit" @click="handleEdit(entity)">
-                <Edit :size="14" />
-                {{ editLabel }}
-              </button>
-              <button class="dropdown-item delete" @click="handleDelete(entity)">
-                <Trash :size="14" />
-                {{ deleteLabel }}
-              </button>
-            </div>
-          </div>
+          <TCardActionMenu
+            :more-label="moreActionsLabel"
+            :edit-label="editLabel"
+            :delete-label="deleteLabel"
+            @edit="handleEdit(entity)"
+            @delete="handleDelete(entity)"
+          />
         </div>
       </div>
 
@@ -56,16 +48,17 @@
       </div>
     </div>
 
-    <div v-if="entities.length === 0" class="empty-state">
-      <p>{{ emptyLabel }}</p>
-    </div>
+    <TEmptyState
+      v-if="entities.length === 0"
+      :description="emptyLabel"
+    />
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted } from 'vue';
-import { MoreVertical, Edit, Trash } from 'lucide-vue-next';
-import * as LucideIcons from 'lucide-vue-next';
+import TCardActionMenu from './TCardActionMenu.vue';
+import TEmptyState from './TEmptyState.vue';
+import { useLucideIcon } from '../composables/useLucideIcon';
 
 const props = defineProps({
   entities: {
@@ -104,26 +97,17 @@ const props = defineProps({
 
 const emit = defineEmits(['edit', 'delete']);
 
-const openMenuId = ref(null);
-
-const toggleMenu = (id) => {
-  openMenuId.value = openMenuId.value === id ? null : id;
-};
-
 const handleEdit = (entity) => {
-  openMenuId.value = null;
   emit('edit', entity);
 };
 
 const handleDelete = (entity) => {
-  openMenuId.value = null;
   emit('delete', entity);
 };
 
 const getIcon = (entity) => {
   const iconValue = entity.icon?.path || entity.icon?.content || entity.icon;
-  if (!iconValue) return null;
-  return LucideIcons[iconValue] || LucideIcons.Box;
+  return useLucideIcon(iconValue);
 };
 
 const getCellValue = (entity, key) => {
@@ -132,20 +116,6 @@ const getCellValue = (entity, key) => {
   }
   return entity[key] ?? '';
 };
-
-const handleClickOutside = () => {
-  if (openMenuId.value !== null) {
-    openMenuId.value = null;
-  }
-};
-
-onMounted(() => {
-  document.addEventListener('click', handleClickOutside);
-});
-
-onUnmounted(() => {
-  document.removeEventListener('click', handleClickOutside);
-});
 </script>
 
 <style lang="scss" scoped>
