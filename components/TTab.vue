@@ -4,15 +4,15 @@
     :aria-selected="active"
     :disabled="disabled"
     :class="[
-      't-tab',
+      't-tab tab tab-btn',
       `t-tab--${variant}`,
-      { active: active, disabled: disabled }
+      { active: active, 'tab--active': active, disabled: disabled }
     ]"
     @click="$emit('click')"
   >
     <component :is="icon" v-if="icon" class="t-tab__icon" />
-    <span class="t-tab__label"><slot>{{ label }}</slot></span>
-    <span v-if="count !== undefined && count !== null" class="t-tab__count">
+    <span class="t-tab__label tab-label"><slot>{{ label }}</slot></span>
+    <span v-if="count !== undefined && count !== null" class="t-tab__count tab-count">
       {{ count }}
     </span>
   </button>

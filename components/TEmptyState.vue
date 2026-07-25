@@ -1,5 +1,5 @@
 <template>
-  <div class="t-empty-state">
+  <div class="t-empty-state empty-state">
     <div v-if="icon || $slots.icon" class="t-empty-state__icon-wrap">
       <slot name="icon">
         <component :is="icon" class="t-empty-state__icon" />

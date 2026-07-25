@@ -2,26 +2,29 @@
   <div class="t-card-action-menu">
     <button
       type="button"
-      class="t-card-action-menu__trigger"
+      class="t-card-action-menu__trigger action-menu"
       :aria-expanded="isOpen"
-      :aria-label="triggerLabel"
+      :aria-label="triggerLabel || moreLabel"
       @click.stop="isOpen = !isOpen"
     >
       <MoreVerticalIcon class="t-card-action-menu__icon" />
     </button>
 
-    <div v-if="isOpen" class="t-card-action-menu__popover" @click.stop>
+    <div v-if="isOpen" class="t-card-action-menu__popover action-dropdown" @click.stop>
       <button
-        v-for="item in items"
+        v-for="item in computedItems"
         :key="item.action"
         type="button"
         :class="[
-          't-card-action-menu__item',
+          't-card-action-menu__item dropdown-item',
+          item.action,
           { 't-card-action-menu__item--danger': item.variant === 'danger' }
         ]"
         @click="handleAction(item.action)"
       >
         <component :is="item.icon" v-if="item.icon" class="t-card-action-menu__item-icon" />
+        <PencilIcon v-else-if="item.action === 'edit'" class="t-card-action-menu__item-icon" />
+        <TrashIcon v-else-if="item.action === 'delete'" class="t-card-action-menu__item-icon" />
         <span>{{ item.label }}</span>
       </button>
     </div>
@@ -29,8 +32,12 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted, type Component } from 'vue';
-import { EllipsisVerticalIcon as MoreVerticalIcon } from '@heroicons/vue/24/outline';
+import { ref, computed, onMounted, onUnmounted, type Component } from 'vue';
+import {
+  EllipsisVerticalIcon as MoreVerticalIcon,
+  PencilIcon,
+  TrashIcon
+} from '@heroicons/vue/24/outline';
 
 interface MenuItem {
   action: string;
@@ -39,25 +46,46 @@ interface MenuItem {
   variant?: 'default' | 'danger';
 }
 
-withDefaults(
+const props = withDefaults(
   defineProps<{
-    items: MenuItem[];
+    items?: MenuItem[];
     triggerLabel?: string;
+    moreLabel?: string;
+    editLabel?: string;
+    deleteLabel?: string;
   }>(),
   {
-    triggerLabel: 'More actions'
+    items: undefined,
+    triggerLabel: 'More actions',
+    moreLabel: 'More actions',
+    editLabel: 'Edit',
+    deleteLabel: 'Delete'
   }
 );
 
 const emit = defineEmits<{
   (e: 'action', key: string): void;
+  (e: 'edit'): void;
+  (e: 'delete'): void;
 }>();
 
 const isOpen = ref(false);
 
+const computedItems = computed((): MenuItem[] => {
+  if (props.items && props.items.length > 0) {
+    return props.items;
+  }
+  return [
+    { action: 'edit', label: props.editLabel },
+    { action: 'delete', label: props.deleteLabel, variant: 'danger' }
+  ];
+});
+
 const handleAction = (action: string) => {
   isOpen.value = false;
   emit('action', action);
+  if (action === 'edit') emit('edit');
+  if (action === 'delete') emit('delete');
 };
 
 const handleDocumentClick = (e: MouseEvent) => {
