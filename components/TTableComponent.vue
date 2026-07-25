@@ -134,6 +134,10 @@ const props = defineProps({
   defaultCurrency: { type: String, default: 'USD' },
   parseAmount: { type: Function, required: true },
   getCurrencySymbol: { type: Function, required: true },
+  convertCurrency: {
+    type: Function,
+    default: (amount) => amount
+  },
   labels: {
     type: Object,
     default: () => ({
@@ -165,23 +169,7 @@ const props = defineProps({
 
 defineEmits(['edit', 'delete', 'recurrent', 'page-change', 'update:searchQuery', 'toggle-filters']);
 
-const CURRENCY_RATES = {
-  USD: 1.0,
-  EUR: 0.85,
-  XAF: 600.0,
-  GBP: 0.75,
-  CAD: 1.35
-};
-
 const displayedTransactions = computed(() => props.transactions);
-
-const convertCurrency = (amount, fromCurrency, toCurrency) => {
-  if (fromCurrency === toCurrency) return amount;
-  const fromRate = CURRENCY_RATES[fromCurrency] || 1;
-  const toRate = CURRENCY_RATES[toCurrency] || 1;
-  const usdAmount = amount / fromRate;
-  return usdAmount * toRate;
-};
 
 const totals = computed(() => {
   // Prefer server-computed totals (covers all pages of filtered set)
@@ -196,7 +184,7 @@ const totals = computed(() => {
 
   txns.forEach((txn) => {
     const { value, currency } = props.parseAmount(txn.amount);
-    const convertedAmount = convertCurrency(value, currency || targetCurrency, targetCurrency);
+    const convertedAmount = props.convertCurrency(value, currency || targetCurrency, targetCurrency);
     if (txn.type === 'INCOME') {
       income += convertedAmount;
     } else {

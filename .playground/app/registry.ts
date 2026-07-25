@@ -131,7 +131,8 @@ export const demos: Record<string, DemoConfig> = {
         { id: 2, name: 'Salary', amount: 3000, category: 'Income', date: '2026-07-01' }
       ],
       parseAmount: (v) => Number(v),
-      getCurrencySymbol: (c) => '$'
+      getCurrencySymbol: (c) => '$',
+      convertCurrency: (v) => v
     }
   },
   EmptyState: {
