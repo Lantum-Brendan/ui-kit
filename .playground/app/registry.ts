@@ -563,7 +563,15 @@ export const demos: Record<string, DemoConfig> = {
     }
   },
   ChatResultRenderer: {
-    props: { result: { type: 'text', content: 'Sample result' } }
+    props: {
+      result: {
+        format_type: 'table',
+        rows: [
+          { name: 'Groceries', amount: -42.5, date: '2026-07-18' },
+          { name: 'Salary', amount: 3000, date: '2026-07-01' }
+        ]
+      }
+    }
   },
   AIChat: {
     props: {
@@ -588,11 +596,6 @@ export const demos: Record<string, DemoConfig> = {
   },
   OnboardingEmptyState: {
     props: { pageType: 'wallets' }
-  },
-  OnboardingWizard: {
-    props: {
-      steps: [{ title: 'Step 1' }, { title: 'Step 2' }]
-    }
   },
   LearningModal: {
     props: { open: true, title: 'Learn more' }
@@ -825,7 +828,98 @@ export const demos: Record<string, DemoConfig> = {
         confidence: 'Confidence'
       }
     }
-  }
+  },
+  ChatProgressSteps: {
+    props: { steps: ['Analyzing transactions', 'Building summary', 'Done'] }
+  },
+  ChatCalloutBlock: {
+    props: { title: 'Heads up', text: 'This is an informational callout.', variant: 'info' }
+  },
+  ChatChartBlock: {
+    props: {
+      title: 'Spending by category',
+      chart_hint: 'donut',
+      data: [
+        { category: 'Food', amount: 640 },
+        { category: 'Transport', amount: 320 },
+        { category: 'Housing', amount: 480 }
+      ]
+    }
+  },
+  ChatComparisonBlock: {
+    props: {
+      title: 'July vs June',
+      series: [
+        { heading: 'July', income: 3000, expense: 2100, net: 900 },
+        { heading: 'June', income: 2800, expense: 2000, net: 800 }
+      ]
+    }
+  },
+  ChatKpiBlock: {
+    props: {
+      title: 'Key metrics',
+      items: [
+        { label: 'Net worth', value: 12340, currency: 'USD', delta_percent: 5.2, trend: 'up' },
+        { label: 'Savings rate', value: '30%', delta_percent: 0, trend: 'flat' }
+      ]
+    }
+  },
+  ChatListBlock: {
+    props: {
+      title: 'Recent transactions',
+      items: [
+        { name: 'Groceries', amount: -42.5, currency: 'USD', category: 'Food', date: '2026-07-18' },
+        { name: 'Salary', amount: 3000, currency: 'USD', category: 'Income', date: '2026-07-01' }
+      ]
+    }
+  },
+  ChatProgressBlock: {
+    props: {
+      title: 'Budget usage',
+      items: [
+        { label: 'Food', current: 640, target: 800, currency: 'USD' },
+        { label: 'Transport', current: 320, target: 400, currency: 'USD' }
+      ]
+    }
+  },
+  ChatQuestionBlock: {
+    props: {
+      prompt: 'What would you like to do?',
+      options: [
+        { label: 'View report', message: 'show report' },
+        { label: 'Add transaction', message: 'add tx' }
+      ]
+    }
+  },
+  ChatQuickActionsBlock: {
+    props: {
+      actions: [
+        { label: 'Show spending by category' },
+        { label: 'Compare this month to last' },
+        { label: 'Export CSV' }
+      ]
+    }
+  },
+  ChatTableBlock: {
+    props: {
+      title: 'Transaction details',
+      columns: ['name', 'amount', 'date'],
+      rows: [
+        { name: 'Groceries', amount: -42.5, date: '2026-07-18' },
+        { name: 'Salary', amount: 3000, date: '2026-07-01' }
+      ]
+    }
+  },
+  ChatTimelineBlock: {
+    props: {
+      title: 'Recent activity',
+      items: [
+        { title: 'Groceries', amount: -42.5, currency: 'USD', date: '2026-07-18', description: 'Weekly shopping' },
+        { title: 'Salary', amount: 3000, currency: 'USD', date: '2026-07-01', description: 'Monthly salary' }
+      ]
+    }
+  },
+  OnboardingWizard: {}
 };
 
 // Generic fallback for components without a tuned demo.
