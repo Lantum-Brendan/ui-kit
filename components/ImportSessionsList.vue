@@ -25,9 +25,9 @@
             </template>
           </span>
         </div>
-        <span class="session-row__badge" :class="`is-${badge(session.status).tone}`">
-          <Loader2 v-if="badge(session.status).spin" :size="13" class="spin" />
-          {{ badge(session.status).label }}
+        <span class="session-row__badge" :class="`is-${badge(session.status, labels).tone}`">
+          <Loader2 v-if="badge(session.status, labels).spin" :size="13" class="spin" />
+          {{ badge(session.status, labels).label }}
         </span>
         <button
           type="button"
@@ -91,12 +91,12 @@ defineEmits<{ (e: 'open' | 'delete', id: number): void }>();
 
 const IN_PROGRESS = ['analyzing', 'extracting', 'enriching', 'checking'];
 
-const badge = (status: ImportSession['status'], labels: Record<string, string>) => {
-  if (status === 'ready') return { label: labels.needsReview, tone: 'review', spin: false };
-  if (IN_PROGRESS.includes(status)) return { label: labels.analyzing, tone: 'progress', spin: true };
-  if (status === 'confirmed') return { label: labels.imported, tone: 'done', spin: false };
-  if (status === 'failed') return { label: labels.failed, tone: 'failed', spin: false };
-  return { label: labels.expired, tone: 'muted', spin: false };
+const badge = (status: ImportSession['status'], sessionLabels: Record<string, string>) => {
+  if (status === 'ready') return { label: sessionLabels.needsReview, tone: 'review', spin: false };
+  if (IN_PROGRESS.includes(status)) return { label: sessionLabels.analyzing, tone: 'progress', spin: true };
+  if (status === 'confirmed') return { label: sessionLabels.imported, tone: 'done', spin: false };
+  if (status === 'failed') return { label: sessionLabels.failed, tone: 'failed', spin: false };
+  return { label: sessionLabels.expired, tone: 'muted', spin: false };
 };
 
 const suggestionCount = (session: ImportSession): number | null => {

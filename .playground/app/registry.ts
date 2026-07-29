@@ -683,33 +683,28 @@ export const demos: Record<string, DemoConfig> = {
       sessions: [
         {
           id: 1,
-          name: 'july_bank_statement.csv',
-          type: 'csv',
-          state: 'done',
-          transactions_count: 24,
+          file_name: 'july_bank_statement.csv',
+          status: 'confirmed',
           created_at: '2026-07-18T10:00:00Z',
-          updated_at: '2026-07-18T10:05:00Z'
+          metadata: { total_suggestions: 24, duplicates_found: 2 }
         },
         {
           id: 2,
-          name: 'utility_bill_june.pdf',
-          type: 'pdf',
-          state: 'processing',
-          transactions_count: 0,
-          created_at: '2026-07-19T08:30:00Z',
-          updated_at: '2026-07-19T08:30:00Z'
+          file_name: 'utility_bill_june.pdf',
+          status: 'analyzing',
+          created_at: '2026-07-19T08:30:00Z'
         }
       ],
       labels: {
-        title: 'Import sessions',
-        empty: 'No import sessions yet',
-        newImport: 'New import',
-        uploaded: 'Uploaded',
-        processing: 'Processing',
-        done: 'Done',
+        recentImports: 'Recent imports',
+        suggestions: 'suggestions',
+        duplicates: 'duplicates',
+        deleteImport: 'Delete import',
+        needsReview: 'Needs review',
+        analyzing: 'Analyzing',
+        imported: 'Imported',
         failed: 'Failed',
-        transactions: '{count} transactions',
-        delete: 'Delete'
+        expired: 'Expired'
       }
     }
   },
