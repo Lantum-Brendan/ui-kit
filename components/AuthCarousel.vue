@@ -2,27 +2,31 @@
   <div class="login-sidebar">
     <div class="sidebar-content">
       <div class="carousel-slide">
-        <div class="slide-image-wrapper">
-          <slot name="image" class="carousel-image">
-            <div class="carousel-image">
-              <svg width="320" height="280" viewBox="0 0 320 280" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <rect x="40" y="20" width="240" height="240" rx="16" fill="rgba(255,255,255,0.1)" stroke="rgba(255,255,255,0.2)" stroke-width="1.5"/>
-                <path d="M80 180L130 130L170 170L220 100L280 160" stroke="rgba(255,255,255,0.5)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                <circle cx="130" cy="130" r="6" fill="rgba(255,255,255,0.6)"/>
-                <circle cx="170" cy="170" r="6" fill="rgba(255,255,255,0.6)"/>
-                <circle cx="220" cy="100" r="6" fill="rgba(255,255,255,0.6)"/>
-                <circle cx="280" cy="160" r="6" fill="rgba(255,255,255,0.6)"/>
-                <rect x="60" y="40" width="80" height="8" rx="4" fill="rgba(255,255,255,0.15)"/>
-                <rect x="60" y="56" width="120" height="6" rx="3" fill="rgba(255,255,255,0.1)"/>
-              </svg>
-            </div>
-          </slot>
+        <div
+          class="slide-image-wrapper"
+          :class="{ 'slide-image-wrapper--art': currentSlideData.image }"
+        >
+          <transition name="fade" mode="out-in">
+            <img
+              v-if="currentSlideData.image"
+              :key="`art-${currentSlide}`"
+              :src="currentSlideData.image"
+              class="slide-art"
+              alt=""
+            />
+            <component
+              v-else-if="currentSlideData.icon"
+              :is="currentSlideData.icon"
+              :key="currentSlide"
+              class="slide-icon"
+            />
+          </transition>
         </div>
         <div class="sidebar-text">
           <transition name="fade" mode="out-in">
-            <div v-if="slides[currentSlide]" :key="currentSlide" class="text-content">
-              <h2>{{ slides[currentSlide].title }}</h2>
-              <p>{{ slides[currentSlide].text }}</p>
+            <div :key="currentSlide" class="text-content">
+              <h2>{{ currentSlideData.title }}</h2>
+              <p>{{ currentSlideData.text }}</p>
             </div>
           </transition>
         </div>
@@ -43,38 +47,21 @@
 import { ref, computed, onMounted, onBeforeUnmount } from 'vue';
 
 const props = defineProps({
-  labels: {
-    type: Object,
-    default: () => ({
-      simple: { title: 'Simple money tracking', text: 'Track your income and expenses in one place with zero fuss.' },
-      automated: { title: 'Automated insights', text: 'Let Trakli categorize and summarize your finances for you.' },
-      opensource: { title: 'Open source', text: 'Your financial data stays yours. Built in the open.' }
-    })
+  slides: {
+    type: Array,
+    default: () => []
   }
 });
 
 const currentSlide = ref(0);
 
-const slides = computed(() => [
-  {
-    title: props.labels.simple.title,
-    text: props.labels.simple.text
-  },
-  {
-    title: props.labels.automated.title,
-    text: props.labels.automated.text
-  },
-  {
-    title: props.labels.opensource.title,
-    text: props.labels.opensource.text
-  }
-]);
+const currentSlideData = computed(() => props.slides[currentSlide.value] || { title: '', text: '' });
 
 let slideInterval;
 
 const startSlideShow = () => {
   slideInterval = setInterval(() => {
-    currentSlide.value = (currentSlide.value + 1) % slides.value.length;
+    currentSlide.value = (currentSlide.value + 1) % props.slides.length;
   }, 5000);
 };
 
@@ -88,8 +75,8 @@ onBeforeUnmount(() => clearInterval(slideInterval));
 .login-sidebar {
   flex: 1;
   display: flex;
-  align-items: center; // ✅ Center horizontally
-  justify-content: center; // ✅ Center vertically
+  align-items: center;
+  justify-content: center;
   padding: 2rem 3rem;
   min-width: 480px;
   color: white;
@@ -114,44 +101,83 @@ onBeforeUnmount(() => clearInterval(slideInterval));
 }
 
 .slide-image-wrapper {
-  width: 65%;
-  max-width: 400px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 220px;
+  height: 220px;
   margin: 0 auto;
-  aspect-ratio: 16/15;
+  border-radius: 40px;
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 20px 40px -24px rgba(0, 0, 0, 0.4);
 
-  .carousel-image {
-    width: 100%;
-    height: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+  &--art {
+    background: radial-gradient(circle at 50% 45%, rgba(255, 255, 255, 0.16), transparent 65%);
+    border: none;
+    box-shadow: none;
+    width: 280px;
+    height: 240px;
+  }
+}
 
-    svg {
-      width: 100%;
-      height: 100%;
-    }
+.slide-icon {
+  width: 120px;
+  height: 120px;
+  color: #fff;
+}
+
+.slide-art {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  transform-origin: 50% 90%;
+  animation: funky-bob 3.6s ease-in-out infinite;
+}
+
+@keyframes funky-bob {
+  0% {
+    transform: translateY(0) rotate(-4deg) scale(1);
+  }
+  30% {
+    transform: translateY(-16px) rotate(3deg) scale(1.03);
+  }
+  55% {
+    transform: translateY(-6px) rotate(-2deg) scale(1);
+  }
+  80% {
+    transform: translateY(-12px) rotate(4deg) scale(1.02);
+  }
+  100% {
+    transform: translateY(0) rotate(-4deg) scale(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .slide-art {
+    animation: none;
   }
 }
 
 .sidebar-text {
   display: flex;
   justify-content: center;
-  align-items: center;
-  height: 180px;
-  overflow: hidden;
+  align-items: flex-start;
+  min-height: 200px;
   text-align: center;
 
   .text-content {
     display: flex;
     flex-direction: column;
     gap: 1rem;
-    max-width: 80%;
+    max-width: 90%;
 
     h2 {
-      font-size: 3.5rem;
+      font-size: 2.75rem;
       font-weight: 700;
-      color: $accent-color;
+      color: $primary;
       margin: 0;
+      line-height: 1.1;
     }
 
     p {
@@ -178,7 +204,7 @@ onBeforeUnmount(() => clearInterval(slideInterval));
   transition: background-color 0.3s;
 
   &.active {
-    background-color: $accent-color;
+    background-color: $primary;
   }
 }
 

@@ -550,7 +550,49 @@ export const demos: Record<string, DemoConfig> = {
     }
   },
   ChatComposer: {
-    props: { modelValue: '' }
+    props: {
+      modelValue: '',
+      labels: {
+        remove: 'Remove',
+        attachFile: 'Attach a file',
+        placeholder: 'Ask me anything about your finances...',
+        send: 'Send',
+        bank_statementLabel: 'Bank statement',
+        bank_statementHint: 'Import transactions from a CSV or PDF',
+        receiptLabel: 'Receipt',
+        receiptHint: 'A photo or scan of a receipt',
+        invoiceLabel: 'Invoice',
+        invoiceHint: 'A bill or invoice document',
+        photoLabel: 'Photo',
+        photoHint: 'Any image from your device',
+        documentLabel: 'Document',
+        documentHint: 'CSV, PDF, spreadsheet or text file'
+      }
+    }
+  },
+  DiscussionDropdown: {
+    props: {
+      sessions: [
+        { id: 1, title: 'Budget help', created_at: '2026-07-18', updated_at: '2026-07-18' },
+        { id: 2, title: 'Spending review', created_at: '2026-07-15', updated_at: '2026-07-15' }
+      ],
+      currentId: 1,
+      currentTitle: 'Budget help',
+      labels: { newChat: 'New chat', noConversations: 'No conversations yet' }
+    }
+  },
+  ChatCanvasBlock: {
+    props: {
+      block: {
+        type: 'canvas',
+        title: 'Monthly Report',
+        blocks: [
+          { type: 'kpi', title: 'Summary', items: [{ label: 'Net', value: 900, currency: 'USD' }] },
+          { type: 'table', title: 'Top expenses', columns: ['name', 'amount'], rows: [{ name: 'Rent', amount: 1200 }] }
+        ]
+      },
+      labels: { document: 'Document', sectionCount: '{count} sections', openInCanvas: 'Open in canvas' }
+    }
   },
   ChatSidebar: {
     props: {
@@ -633,6 +675,72 @@ export const demos: Record<string, DemoConfig> = {
           { key: 'pdf', name: 'Bank statement', format: 'PDF', badge: 'PDF' },
           { key: 'image', name: 'Receipt photo', format: 'PNG · JPG', badge: 'IMG' }
         ]
+      }
+    }
+  },
+  ImportSessionsList: {
+    props: {
+      sessions: [
+        {
+          id: 1,
+          name: 'july_bank_statement.csv',
+          type: 'csv',
+          state: 'done',
+          transactions_count: 24,
+          created_at: '2026-07-18T10:00:00Z',
+          updated_at: '2026-07-18T10:05:00Z'
+        },
+        {
+          id: 2,
+          name: 'utility_bill_june.pdf',
+          type: 'pdf',
+          state: 'processing',
+          transactions_count: 0,
+          created_at: '2026-07-19T08:30:00Z',
+          updated_at: '2026-07-19T08:30:00Z'
+        }
+      ],
+      labels: {
+        title: 'Import sessions',
+        empty: 'No import sessions yet',
+        newImport: 'New import',
+        uploaded: 'Uploaded',
+        processing: 'Processing',
+        done: 'Done',
+        failed: 'Failed',
+        transactions: '{count} transactions',
+        delete: 'Delete'
+      }
+    }
+  },
+  ImportUpload: {
+    props: {
+      isAnalyzing: false,
+      labels: {
+        showName: 'Show {name}',
+        smartImport: 'Smart import',
+        title: 'Bring your statements and receipts to life',
+        subtitle: 'Drop a CSV, PDF, or photo. We extract the transactions, match wallets and categories, and let you review before saving.',
+        dropzone: 'Drop your file here or click to browse',
+        supportedFormats: 'Supports CSV, PDF, PNG, JPG, TIFF, BMP',
+        remove: 'Remove',
+        documentType: 'Document type',
+        autoDetect: 'Auto-detect',
+        bankStatement: 'Bank statement',
+        receipt: 'Receipt',
+        invoice: 'Invoice',
+        payStub: 'Pay stub',
+        utilityBill: 'Utility bill',
+        analyzing: 'Analyzing...',
+        analyzeDocument: 'Analyze document',
+        csvLabel: 'Spreadsheet',
+        csvFormat: 'CSV / XLSX',
+        pdfLabel: 'Bank statement',
+        pdfFormat: 'PDF document',
+        imageLabel: 'Receipt photo',
+        imageFormat: 'PNG · JPG · TIFF',
+        receiptPhotoLabel: 'Paper receipt',
+        receiptPhotoFormat: 'Scanned image'
       }
     }
   },

@@ -73,7 +73,7 @@
               type="button"
               class="doc-dot"
               :class="{ 'doc-dot--active': i === activeIndex }"
-              :aria-label="fill(labels.showName, { name: d.name })"
+              :aria-label="labels.showName.replace('{name}', d.name)"
               @click="goTo(i)"
             />
           </div>
@@ -82,10 +82,8 @@
 
       <div class="upload-content">
         <span class="upload-eyebrow">{{ labels.smartImport }}</span>
-        <h2 class="upload-title">{{ labels.bringToLife }}</h2>
-        <p class="upload-subtitle">
-          {{ labels.dropStatement }}
-        </p>
+        <h2 class="upload-title">{{ labels.title }}</h2>
+        <p class="upload-subtitle">{{ labels.subtitle }}</p>
 
         <div
           class="drop-zone"
@@ -97,8 +95,8 @@
         >
           <ArrowUpTrayIcon class="drop-zone__icon" />
           <div class="drop-zone__text">
-            <p class="drop-zone__title">{{ labels.dropHere }}</p>
-            <p class="drop-zone__subtitle">{{ labels.supports }}</p>
+            <p class="drop-zone__title">{{ labels.dropzone }}</p>
+            <p class="drop-zone__subtitle">{{ labels.supportedFormats }}</p>
           </div>
         </div>
 
@@ -145,72 +143,89 @@
 </template>
 
 <script setup lang="ts">
-import { ArrowUpTrayIcon, DocumentIcon, XMarkIcon } from '@heroicons/vue/24/outline';
+import {
+  Upload as ArrowUpTrayIcon,
+  FileText as DocumentIcon,
+  X as XMarkIcon
+} from 'lucide-vue-next';
 
-const fill = (t, v) =>
-  Object.entries(v).reduce((s, [k, val]) => s.replace(`{${k}}`, val), t);
+const props = withDefaults(
+  defineProps<{
+    isAnalyzing: boolean;
+    labels?: {
+      showName?: string;
+      smartImport?: string;
+      title?: string;
+      subtitle?: string;
+      dropzone?: string;
+      supportedFormats?: string;
+      remove?: string;
+      documentType?: string;
+      autoDetect?: string;
+      bankStatement?: string;
+      receipt?: string;
+      invoice?: string;
+      payStub?: string;
+      utilityBill?: string;
+      analyzing?: string;
+      analyzeDocument?: string;
+      csvLabel?: string;
+      csvFormat?: string;
+      pdfLabel?: string;
+      pdfFormat?: string;
+      imageLabel?: string;
+      imageFormat?: string;
+      receiptPhotoLabel?: string;
+      receiptPhotoFormat?: string;
+    };
+  }>(),
+  {
+    labels: () => ({
+      showName: 'Show {name}',
+      smartImport: 'Smart import',
+      title: 'Bring your statements and receipts to life',
+      subtitle: 'Drop a CSV, PDF, or photo. We extract the transactions, match wallets and categories, and let you review before saving.',
+      dropzone: 'Drop your file here or click to browse',
+      supportedFormats: 'Supports CSV, PDF, PNG, JPG, TIFF, BMP',
+      remove: 'Remove',
+      documentType: 'Document type',
+      autoDetect: 'Auto-detect',
+      bankStatement: 'Bank statement',
+      receipt: 'Receipt',
+      invoice: 'Invoice',
+      payStub: 'Pay stub',
+      utilityBill: 'Utility bill',
+      analyzing: 'Analyzing...',
+      analyzeDocument: 'Analyze document',
+      csvLabel: 'Spreadsheet',
+      csvFormat: 'CSV / XLSX',
+      pdfLabel: 'Bank statement',
+      pdfFormat: 'PDF document',
+      imageLabel: 'Receipt photo',
+      imageFormat: 'PNG · JPG · TIFF',
+      receiptPhotoLabel: 'Paper receipt',
+      receiptPhotoFormat: 'Scanned image'
+    })
+  }
+);
 
 const emit = defineEmits<{
   upload: [file: File, documentType?: string];
 }>();
-
-const props = defineProps<{
-  isAnalyzing: boolean;
-  labels?: {
-    showName: string;
-    smartImport: string;
-    bringToLife: string;
-    dropStatement: string;
-    dropHere: string;
-    supports: string;
-    remove: string;
-    documentType: string;
-    autoDetect: string;
-    bankStatement: string;
-    receipt: string;
-    invoice: string;
-    payStub: string;
-    utilityBill: string;
-    analyzing: string;
-    analyzeDocument: string;
-    docTypes?: { key: string; name: string; format: string; badge: string }[];
-  };
-}>();
-
-const _labels = props.labels || {
-  showName: 'Show {name}',
-  smartImport: 'Smart import',
-  bringToLife: 'Bring your statements and receipts to life',
-  dropStatement:
-    'Drop a CSV, PDF, or photo. We extract the transactions, match wallets and categories, and let you review before saving.',
-  dropHere: 'Drop your file here or click to browse',
-  supports: 'Supports CSV, PDF, PNG, JPG, TIFF, BMP',
-  remove: 'Remove',
-  documentType: 'Document type',
-  autoDetect: 'Auto-detect',
-  bankStatement: 'Bank statement',
-  receipt: 'Receipt',
-  invoice: 'Invoice',
-  payStub: 'Pay stub',
-  utilityBill: 'Utility bill',
-  analyzing: 'Analyzing...',
-  analyzeDocument: 'Analyze document',
-  docTypes: [
-    { key: 'csv', name: 'Spreadsheet', format: 'CSV / XLSX', badge: 'CSV' },
-    { key: 'pdf', name: 'Bank statement', format: 'PDF document', badge: 'PDF' },
-    { key: 'image', name: 'Receipt photo', format: 'PNG · JPG · TIFF', badge: 'IMG' },
-    { key: 'receipt', name: 'Paper receipt', format: 'Scanned image', badge: 'OCR' }
-  ]
-};
 
 const fileInputRef = ref<HTMLInputElement | null>(null);
 const selectedFile = ref<File | null>(null);
 const documentType = ref('');
 const isDragging = ref(false);
 
-const docTypes = _labels.docTypes!;
+const docTypes = computed(() => [
+  { key: 'csv', name: props.labels.csvLabel, format: props.labels.csvFormat, badge: 'CSV' },
+  { key: 'pdf', name: props.labels.pdfLabel, format: props.labels.pdfFormat, badge: 'PDF' },
+  { key: 'image', name: props.labels.imageLabel, format: props.labels.imageFormat, badge: 'IMG' },
+  { key: 'receipt', name: props.labels.receiptPhotoLabel, format: props.labels.receiptPhotoFormat, badge: 'OCR' }
+]);
 const activeIndex = ref(0);
-const activeDoc = computed(() => docTypes[activeIndex.value]);
+const activeDoc = computed(() => docTypes.value[activeIndex.value]);
 let rotateTimer: ReturnType<typeof setInterval> | null = null;
 
 const goTo = (i: number) => {
@@ -223,7 +238,7 @@ const goTo = (i: number) => {
 
 const startRotate = () => {
   rotateTimer = setInterval(() => {
-    activeIndex.value = (activeIndex.value + 1) % docTypes.length;
+    activeIndex.value = (activeIndex.value + 1) % docTypes.value.length;
   }, 2800);
 };
 
