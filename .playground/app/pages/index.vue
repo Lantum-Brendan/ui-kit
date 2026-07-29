@@ -200,6 +200,7 @@ const filtered = computed(() => {
   display: flex;
   flex-direction: column;
   min-width: 0;
+  overflow-x: hidden;
   background: var(--color-primary-light);
 }
 

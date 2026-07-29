@@ -98,6 +98,20 @@ watch(selectedKey, () => { renderError.value = null; });
     <CollapsibleSection v-else-if="meta.name === 'CollapsibleSection'" title="Section">
       Collapsible content
     </CollapsibleSection>
+
+    <TModalBody v-else-if="meta.name === 'TModalBody'">
+      <p>Modal body content goes here.</p>
+    </TModalBody>
+
+    <TModalFooter v-else-if="meta.name === 'TModalFooter'">
+      <TButton text="Cancel" variant="outline" :full-width="false" />
+      <TButton text="Confirm" variant="primary" :full-width="false" />
+    </TModalFooter>
+
+    <TFormRow v-else-if="meta.name === 'TFormRow'">
+      <TFormField label="Name" />
+      <TFormField label="Email" />
+    </TFormRow>
   </div>
 
   <!-- Generic: render with demo props -->
@@ -109,6 +123,7 @@ watch(selectedKey, () => { renderError.value = null; });
 <style scoped>
 .demo {
   padding: 2rem;
+  overflow-x: hidden;
 }
 .btn-row {
   display: flex;

@@ -61,6 +61,9 @@ export const slottedComponents = new Set([
   'TPageShell',
   'TDropdown',
   'TTabs',
+  'TModalBody',
+  'TModalFooter',
+  'TFormRow',
   'CollapsibleSection'
 ]);
 
@@ -133,6 +136,47 @@ export const demos: Record<string, DemoConfig> = {
       parseAmount: (v) => Number(v),
       getCurrencySymbol: (c) => '$',
       convertCurrency: (v) => v
+    }
+  },
+  TFormField: {
+    props: {
+      label: 'Email address',
+      hint: 'We will never share your email.',
+      error: ''
+    }
+  },
+  TFormRow: {},
+  TListHeader: {
+    props: { title: 'Recent transactions' }
+  },
+  TModalBody: {},
+  TModalFooter: {},
+  TModal: {
+    props: {
+      modelValue: true,
+      title: 'Confirm action'
+    }
+  },
+  TSectionHeader: {
+    props: {
+      eyebrow: 'Overview',
+      title: 'Account summary',
+      subtitle: 'Your financial snapshot'
+    }
+  },
+  TTabList: {
+    props: {
+      tabs: [
+        { id: 'overview', label: 'Overview' },
+        { id: 'transactions', label: 'Transactions' },
+        { id: 'budgets', label: 'Budgets' }
+      ]
+    }
+  },
+  TTabPanel: {
+    props: {
+      value: 'panel1',
+      activeValue: 'panel1'
     }
   },
   EmptyState: {
