@@ -1,0 +1,181 @@
+<template>
+  <div class="component-loader">
+    <LoadingSkeleton
+      v-if="isLoading && !hasData"
+      :variant="skeletonVariant"
+      :count="skeletonCount"
+      :columns="skeletonColumns"
+    />
+
+    <div v-if="error && !isLoading" class="error-state">
+      <div class="error-icon">
+        <AlertTriangle :size="24" />
+      </div>
+      <div class="error-content">
+        <h3 class="error-title">
+          <span v-if="getErrorCode(error)">{{ labels.error }} {{ getErrorCode(error) }}</span>
+          <span v-else>{{ labels.somethingWentWrong }}</span>
+        </h3>
+        <p class="error-message">{{ formatErrorMessage(error) }}</p>
+        <button v-if="onRetry" class="retry-btn" @click="onRetry">
+          {{ labels.tryAgain }}
+        </button>
+      </div>
+    </div>
+
+    <div v-if="!isLoading && !error && !hasData && showEmpty" class="empty-state">
+      <slot name="empty">
+        <EmptyState :page-name="emptyStateName" @create="$emit('create')" />
+      </slot>
+    </div>
+
+    <div v-if="hasData" class="content-wrapper">
+      <slot />
+    </div>
+  </div>
+</template>
+
+<script setup>
+import LoadingSkeleton from './LoadingSkeleton.vue';
+import EmptyState from './EmptyState.vue';
+import { AlertTriangle } from 'lucide-vue-next';
+
+function formatErrorMessage(error) {
+  if (!error) return '';
+  if (typeof error === 'string') return error;
+  if (error?.message) return error.message;
+  return String(error);
+}
+
+function getErrorCode(error) {
+  if (!error) return null;
+  if (error?.response?.status) return error.response.status;
+  if (error?.status) return error.status;
+  if (error?.statusCode) return error.statusCode;
+  if (typeof error === 'string') {
+    const statusMatch = error.match(/\b(4\d{2}|5\d{2})\b/);
+    if (statusMatch) return parseInt(statusMatch[0]);
+  }
+  return null;
+}
+
+defineProps({
+  isLoading: {
+    type: Boolean,
+    default: false
+  },
+  error: {
+    type: [String, Object, Error],
+    default: null
+  },
+  hasData: {
+    type: Boolean,
+    default: false
+  },
+  showEmpty: {
+    type: Boolean,
+    default: true
+  },
+  emptyStateName: {
+    type: String,
+    default: 'items'
+  },
+  skeletonVariant: {
+    type: String,
+    default: 'default',
+    validator: (value) => ['default', 'list', 'card', 'table'].includes(value)
+  },
+  skeletonCount: {
+    type: Number,
+    default: 3
+  },
+  skeletonColumns: {
+    type: Number,
+    default: 4
+  },
+  onRetry: {
+    type: Function,
+    default: null
+  },
+  labels: {
+    type: Object,
+    default: () => ({
+      error: 'Error:',
+      somethingWentWrong: 'Something went wrong',
+      tryAgain: 'Try Again'
+    })
+  }
+});
+
+defineEmits(['create']);
+</script>
+
+<style scoped lang="scss">
+@use '../assets/scss/_vars.scss' as *;
+
+.component-loader {
+  width: 100%;
+}
+
+.error-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 2rem;
+  background: rgba(var(--color-error-rgb), 0.05);
+  border: 1px solid rgba(var(--color-error-rgb), 0.2);
+  border-radius: $radius-lg;
+  margin: 1rem 0;
+
+  .error-icon {
+    color: $error-color;
+    margin-bottom: 1rem;
+  }
+
+  .error-content {
+    max-width: 400px;
+  }
+
+  .error-title {
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: $error-color;
+    margin: 0 0 0.5rem 0;
+  }
+
+  .error-message {
+    color: $error-dark;
+    margin: 0 0 1.5rem 0;
+    line-height: 1.5;
+  }
+
+  .retry-btn {
+    padding: 0.75rem 1.5rem;
+    background: $primary;
+    color: white;
+    border: none;
+    border-radius: $radius-md;
+    cursor: pointer;
+    font-weight: 500;
+    transition: background-color 0.2s;
+
+    &:hover {
+      background: $primary-hover;
+    }
+
+    &:focus {
+      outline: none;
+      box-shadow: 0 0 0 3px rgba(var(--color-primary-rgb), 0.1);
+    }
+  }
+}
+
+.empty-state {
+  width: 100%;
+}
+
+.content-wrapper {
+  width: 100%;
+}
+</style>

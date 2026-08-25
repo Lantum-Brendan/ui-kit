@@ -695,33 +695,7 @@ export const demos: Record<string, DemoConfig> = {
       transaction: { id: 1, name: 'Groceries', amount: -42.5, date: '2026-07-18' }
     }
   },
-  ImportUpload: {
-    props: {
-      labels: {
-        showName: 'Show {name}',
-        smartImport: 'Smart import',
-        bringToLife: 'Bring statements to life',
-        dropStatement: 'Drop a file to import.',
-        dropHere: 'Drop your file here',
-        supports: 'Supports CSV, PDF, images',
-        remove: 'Remove',
-        documentType: 'Document type',
-        autoDetect: 'Auto-detect',
-        bankStatement: 'Bank statement',
-        receipt: 'Receipt',
-        invoice: 'Invoice',
-        payStub: 'Pay stub',
-        utilityBill: 'Utility bill',
-        analyzing: 'Analyzing…',
-        analyzeDocument: 'Analyze document',
-        docTypes: [
-          { key: 'csv', name: 'Spreadsheet', format: 'CSV / XLSX', badge: 'CSV' },
-          { key: 'pdf', name: 'Bank statement', format: 'PDF', badge: 'PDF' },
-          { key: 'image', name: 'Receipt photo', format: 'PNG · JPG', badge: 'IMG' }
-        ]
-      }
-    }
-  },
+
   ImportSessionsList: {
     props: {
       sessions: [

@@ -38,6 +38,8 @@ const props = defineProps({
   }
 });
 
+defineEmits(['click']);
+
 const buttonClasses = [
   'button',
   `button--${props.variant}`,
@@ -50,7 +52,7 @@ const buttonClasses = [
 </script>
 
 <template>
-  <NuxtLink v-if="to" :to="to" :class="buttonClasses" :disabled="disabled || loading">
+  <NuxtLink v-if="to" :to="to" :class="buttonClasses" :disabled="disabled || loading" @click="$emit('click', $event)">
     <span v-if="$slots['left-icon']" class="button__icon-left">
       <slot name="left-icon" />
     </span>
@@ -59,7 +61,7 @@ const buttonClasses = [
       <slot v-else>{{ text }}</slot>
     </span>
   </NuxtLink>
-  <button v-else :class="buttonClasses" :type="type" :disabled="disabled || loading">
+  <button v-else :class="buttonClasses" :type="type" :disabled="disabled || loading" @click="$emit('click', $event)">
     <span v-if="$slots['left-icon']" class="button__icon-left">
       <slot name="left-icon" />
     </span>

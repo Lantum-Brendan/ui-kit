@@ -1,0 +1,210 @@
+<template>
+  <div>
+    <div class="form-group form-group--full">
+      <label class="form-label">{{ labels.profilePicture }}</label>
+      <div class="avatar-container">
+        <img v-if="avatarUrl" :src="avatarUrl" :alt="labels.userAvatar" class="avatar-image" />
+      </div>
+    </div>
+    <div class="section-grid">
+      <div class="form-group">
+        <label class="form-label">{{ labels.firstName }}</label>
+        <input v-if="isEditMode" v-model="firstName" type="text" class="form-input" />
+        <p v-else class="text-display">{{ firstName }}</p>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">{{ labels.lastName }}</label>
+        <input v-if="isEditMode" v-model="lastName" type="text" class="form-input" />
+        <p v-else class="text-display">{{ lastName }}</p>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">{{ labels.username }}</label>
+        <input v-if="isEditMode" v-model="username" type="text" class="form-input" />
+        <p v-else class="text-display">{{ username }}</p>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">{{ labels.emailAddress }}</label>
+        <input v-if="isEditMode" v-model="email" type="email" class="form-input" />
+        <p v-else class="text-display">{{ email }}</p>
+      </div>
+
+      <div class="form-group form-group--full">
+        <label class="form-label">{{ labels.password }}</label>
+        <button type="button" class="dashed-button" @click="$emit('open-password-modal')">
+          <span>{{ labels.changePassword }}</span>
+          <Lock class="inline-icon" />
+        </button>
+      </div>
+    </div>
+
+    <div v-if="isEditMode" class="actions">
+      <button type="button" class="submit-btn" @click="handleSave">
+        <Save class="inline-icon" />
+        <span>{{ labels.updateAccount }}</span>
+      </button>
+      <p
+        v-if="message"
+        class="message"
+        :class="{ 'message--success': isSuccess, 'message--info': !isSuccess }"
+      >
+        {{ message }}
+      </p>
+    </div>
+  </div>
+</template>
+
+<script setup>
+import { ref, watch } from 'vue';
+import { Lock, Save } from 'lucide-vue-next';
+
+const emit = defineEmits(['open-password-modal', 'update-account']);
+
+const props = defineProps({
+  isEditMode: { type: Boolean, default: false },
+  user: {
+    type: Object,
+    default: () => ({
+      first_name: '',
+      last_name: '',
+      username: '',
+      email: ''
+    })
+  },
+  avatarUrl: { type: String, default: '' },
+  labels: {
+    type: Object,
+    default: () => ({
+      profilePicture: 'Profile Picture',
+      userAvatar: 'User Avatar',
+      firstName: 'First Name',
+      lastName: 'Last Name',
+      username: 'Username',
+      emailAddress: 'Email Address',
+      password: 'Password',
+      changePassword: 'Change Password',
+      updateAccount: 'Update Account'
+    })
+  }
+});
+
+const firstName = ref(props.user?.first_name || '');
+const lastName = ref(props.user?.last_name || '');
+const username = ref(props.user?.username || '');
+const email = ref(props.user?.email || '');
+
+const message = ref('');
+const isSuccess = ref(false);
+
+watch(
+  () => props.isEditMode,
+  () => {
+    message.value = '';
+  }
+);
+
+watch(
+  () => props.user,
+  (newUser) => {
+    firstName.value = newUser?.first_name || '';
+    lastName.value = newUser?.last_name || '';
+    username.value = newUser?.username || '';
+    email.value = newUser?.email || '';
+  },
+  { immediate: true, deep: true }
+);
+
+const handleSave = () => {
+  emit('update-account', {
+    first_name: firstName.value,
+    last_name: lastName.value,
+    username: username.value,
+    email: email.value
+  });
+};
+</script>
+
+<style lang="scss" scoped>
+@use '../assets/scss/_vars.scss' as *;
+
+.avatar-container {
+  margin-top: 0.5rem;
+  display: flex;
+  justify-content: center;
+}
+
+.avatar-image {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 3px solid $bg-white;
+  box-shadow: $shadow-md;
+}
+
+.section-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+
+  @media (min-width: $breakpoint-md) {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.form-group--full {
+  grid-column: 1 / -1;
+}
+
+.text-display {
+  padding: 0.75rem 1rem;
+  border-radius: $radius-lg;
+  background: $bg-gray;
+  color: $text-primary;
+  font-weight: $font-medium;
+}
+
+.dashed-button {
+  width: 100%;
+  text-align: left;
+  padding: 0.75rem 1rem;
+  border-radius: $radius-lg;
+  border: 2px dashed $primary;
+  color: $primary;
+  transition: $transition-base;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  &:hover {
+    background: $primary-light;
+  }
+}
+
+.inline-icon {
+  width: 18px;
+  height: 18px;
+}
+
+.actions {
+  margin-top: 1rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.message {
+  margin-top: 0.75rem;
+  font-weight: $font-semibold;
+  text-align: center;
+
+  &--success {
+    color: $primary;
+  }
+  &--info {
+    color: $accent-color;
+  }
+}
+</style>
