@@ -27,9 +27,9 @@
           preserveAspectRatio="xMaxYMid slice"
           aria-hidden="true"
         >
-          <circle cx="240" cy="40" r="60" fill="var(--surface-accent)" opacity="0.35" />
-          <circle cx="270" cy="120" r="36" fill="var(--surface-deep)" opacity="0.35" />
-          <circle cx="200" cy="130" r="10" fill="var(--surface-deep)" opacity="0.5" />
+          <circle cx="240" cy="40" r="60" fill="var(--surface-accent, var(--color-primary-lighter))" opacity="0.35" />
+          <circle cx="270" cy="120" r="36" fill="var(--surface-deep, var(--color-primary-dark))" opacity="0.35" />
+          <circle cx="200" cy="130" r="10" fill="var(--surface-deep, var(--color-primary-dark))" opacity="0.5" />
         </svg>
         <div class="kpi-icon">
           <component :is="card.icon" :size="18" />
@@ -195,7 +195,7 @@ const formatCurrency = (val) => {
   border-radius: 10px;
   background: var(--glass-bg);
   border: 1px solid $border-light;
-  color: var(--surface-deep);
+  color: var(--surface-deep, var(--color-primary-dark));
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -219,7 +219,7 @@ const formatCurrency = (val) => {
 }
 
 .kpi-value {
-  color: var(--surface-ink);
+  color: var(--surface-ink, var(--color-text-primary));
   font-variant-numeric: tabular-nums;
   margin: 0;
   font-size: $font-size-lg;

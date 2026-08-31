@@ -144,7 +144,7 @@ import {
   Bot, Plus, Maximize2, Minimize2, PanelLeft, PanelLeftClose,
   Wallet, PieChart, Coins, Receipt, PiggyBank, TrendingUp
 } from 'lucide-vue-next';
-import * as lucideIcons from 'lucide-vue-next';
+import { lucideMap } from '../utils/icons';
 import ChatSidebar from './ChatSidebar.vue';
 import ChatComposer from './ChatComposer.vue';
 import ChatEmptyState from './ChatEmptyState.vue';
@@ -201,7 +201,6 @@ const inputValue = computed({
 
 const hasConversation = computed(() => props.messages.length > 0);
 
-const lucideMap = lucideIcons;
 const iconFor = (name) => (name && lucideMap[name]) ? lucideMap[name] : null;
 
 const handleSuggestion = (text) => {

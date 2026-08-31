@@ -8,14 +8,14 @@
     >
       <defs>
         <radialGradient id="topcard-bloom" cx="92%" cy="50%" r="50%">
-          <stop offset="0%" stop-color="var(--surface-accent)" stop-opacity="0.45" />
-          <stop offset="100%" stop-color="var(--surface-accent)" stop-opacity="0" />
+          <stop offset="0%" stop-color="var(--surface-accent, var(--color-primary-lighter))" stop-opacity="0.45" />
+          <stop offset="100%" stop-color="var(--surface-accent, var(--color-primary-lighter))" stop-opacity="0" />
         </radialGradient>
       </defs>
       <circle cx="1080" cy="60" r="170" fill="url(#topcard-bloom)" />
-      <circle cx="1040" cy="18" r="22" fill="var(--surface-deep)" opacity="0.18" />
-      <circle cx="1150" cy="100" r="10" fill="var(--surface-deep)" opacity="0.28" />
-      <circle cx="980" cy="98" r="6" fill="var(--surface-accent)" opacity="0.8" />
+      <circle cx="1040" cy="18" r="22" fill="var(--surface-deep, var(--color-primary-dark))" opacity="0.18" />
+      <circle cx="1150" cy="100" r="10" fill="var(--surface-deep, var(--color-primary-dark))" opacity="0.28" />
+      <circle cx="980" cy="98" r="6" fill="var(--surface-accent, var(--color-primary-lighter))" opacity="0.8" />
     </svg>
     <div class="header-content">
       <div class="content-main">
@@ -60,6 +60,7 @@ import { computed } from 'vue';
 import TInfoButton from './TInfoButton.vue';
 import TButton from './TButton.vue';
 import { PlusIcon } from '@heroicons/vue/24/outline';
+import { fill } from '../utils/fill';
 import {
   ChevronRight,
   Wallet,
@@ -74,8 +75,7 @@ import {
   Sparkles
 } from 'lucide-vue-next';
 
-const fill = (t, v) =>
-  Object.entries(v).reduce((s, [k, val]) => s.replace(`{${k}}`, val), t);
+
 
 const props = defineProps({
   pageName: {
@@ -228,7 +228,7 @@ const resolvedIcon = computed(
   border-radius: 10px;
   background: var(--glass-bg);
   border: 1px solid $border-light;
-  color: var(--surface-deep);
+  color: var(--surface-deep, var(--color-primary-dark));
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -244,7 +244,7 @@ const resolvedIcon = computed(
 }
 
 .title {
-  color: var(--surface-ink);
+  color: var(--surface-ink, var(--color-text-primary));
   font-size: $font-size-base;
   font-weight: $font-bold;
   letter-spacing: -0.015em;
@@ -260,7 +260,7 @@ const resolvedIcon = computed(
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  color: var(--surface-deep);
+  color: var(--surface-deep, var(--color-primary-dark));
   opacity: 0.75;
   font-size: 10px;
   font-weight: $font-bold;
@@ -273,7 +273,7 @@ const resolvedIcon = computed(
   transition: color $duration-fast $easing-standard;
 
   &:hover {
-    color: var(--surface-deep);
+    color: var(--surface-deep, var(--color-primary-dark));
     opacity: 1;
   }
 }

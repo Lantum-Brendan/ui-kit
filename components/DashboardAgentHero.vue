@@ -60,6 +60,7 @@
 
 <script setup>
 import { ref } from 'vue';
+import { fill } from '../utils/fill';
 import {
   Bot,
   ArrowUp,
@@ -98,8 +99,7 @@ const props = defineProps({
 
 const emit = defineEmits(['ask', 'action']);
 
-const fill = (template, params) =>
-  template.replace(/\{(\w+)\}/g, (_, key) => params[key] ?? '');
+
 
 const askText = ref('');
 const dismissed = ref(false);
@@ -145,7 +145,7 @@ const dismiss = () => {
 
   .amb {
     position: absolute;
-    color: var(--surface-deep);
+    color: var(--surface-deep, var(--color-primary-dark));
     opacity: 0.07;
   }
   .a1 { top: 8%; left: 2%; transform: rotate(-12deg); }
@@ -170,7 +170,7 @@ const dismiss = () => {
   border: none;
   border-radius: 8px;
   background: transparent;
-  color: var(--surface-deep);
+  color: var(--surface-deep, var(--color-primary-dark));
   cursor: pointer;
   opacity: 0.7;
   transition: $transition-base;
@@ -211,7 +211,7 @@ const dismiss = () => {
   border-radius: 14px;
   background: var(--glass-bg);
   border: 1px solid $border-light;
-  color: var(--surface-deep);
+  color: var(--surface-deep, var(--color-primary-dark));
   flex-shrink: 0;
   backdrop-filter: blur(8px);
 }
@@ -225,7 +225,7 @@ const dismiss = () => {
 
 .hero-title {
   margin: 0;
-  color: var(--surface-ink);
+  color: var(--surface-ink, var(--color-text-primary));
   font-size: $font-size-2xl;
   font-weight: $font-bold;
   letter-spacing: -0.02em;
@@ -238,7 +238,7 @@ const dismiss = () => {
 
 .hero-sub {
   margin: 0;
-  color: var(--surface-ink);
+  color: var(--surface-ink, var(--color-text-primary));
   opacity: 0.8;
   font-size: $font-size-base;
 }
@@ -313,7 +313,7 @@ const dismiss = () => {
   padding: 6px $spacing-3;
   border: 1px solid $border-light;
   background: var(--glass-bg);
-  color: var(--surface-ink);
+  color: var(--surface-ink, var(--color-text-primary));
   border-radius: 999px;
   font-size: $font-size-sm;
   font-weight: $font-medium;

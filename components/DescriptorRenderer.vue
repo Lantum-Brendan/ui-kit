@@ -64,7 +64,7 @@
 
 <script setup lang="ts">
 import { computed, type Component } from 'vue';
-import * as LucideIcons from 'lucide-vue-next';
+import { lucideMap } from '../utils/icons';
 import TCard from './TCard.vue';
 import TButton from './TButton.vue';
 import { useLucideIcon } from '../composables/useLucideIcon';
@@ -128,7 +128,7 @@ const resolved = computed(() =>
 );
 
 // Resolve the descriptor's icon name to a lucide component with a fallback.
-const lucide = LucideIcons as unknown as Record<string, Component>;
+const lucide = lucideMap as unknown as Record<string, Component>;
 const icon = useLucideIcon(
   computed(() => integration.value.icon ?? undefined),
   lucide.Puzzle

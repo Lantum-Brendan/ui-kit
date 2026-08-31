@@ -70,6 +70,7 @@
 <script setup>
 import { ref, onMounted, onUnmounted } from 'vue';
 import { Bell, BellOff, Check, Clock, TrendingUp, AlertCircle, Award } from 'lucide-vue-next';
+import { fill } from '../utils/fill';
 
 const props = defineProps({
   notifications: { type: Array, default: () => [] },
@@ -133,8 +134,7 @@ const truncateText = (text, maxLength) => {
   return text.length > maxLength ? text.substring(0, maxLength) + '...' : text;
 };
 
-const fill = (template, params) =>
-  template.replace(/\{(\w+)\}/g, (_, key) => params[key] ?? '');
+
 
 const formatTime = (dateString) => {
   const date = new Date(dateString);

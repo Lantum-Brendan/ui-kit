@@ -221,15 +221,16 @@
 </template>
 
 <script setup lang="ts">
+import { ref } from 'vue';
 import { ChevronDownIcon } from '@heroicons/vue/24/outline';
+import { fill } from '../utils/fill';
 
 type Wallet = any;
 type Category = any;
 type Party = any;
 type SuggestionWithDuplicate = any;
 
-const fill = (t: string, v: Record<string, any>) =>
-  Object.entries(v).reduce((s, [k, val]) => s.replace(`{${k}}`, val), t);
+
 
 defineProps<{
   suggestions: SuggestionWithDuplicate[];

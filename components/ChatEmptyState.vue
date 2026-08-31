@@ -18,13 +18,11 @@
   </div>
 </template>
 
-<script setup lang="ts">
+<script setup>
 import { computed } from 'vue';
 import { Sparkles } from 'lucide-vue-next';
 
-defineEmits<{
-  (e: 'pick', prompt: string): void;
-}>();
+defineEmits(['pick']);
 
 const suggestionPrompts = [
   'How much did I spend last month?',
@@ -33,18 +31,14 @@ const suggestionPrompts = [
   'What wallet has the most money?'
 ];
 
-const props = defineProps<{
-  labels?: {
-    askAboutFinances: string;
-    tryOneOfThese: string;
-    suggestions: Record<string, string>;
-  };
-}>();
+const props = defineProps({
+  labels: { type: Object, default: null }
+});
 
 const defaultLabels = {
   askAboutFinances: 'Ask about your finances',
   tryOneOfThese: 'Or try one of these',
-  suggestions: {} as Record<string, string>
+  suggestions: {}
 };
 
 const labels = computed(() => props.labels ?? defaultLabels);

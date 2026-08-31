@@ -73,9 +73,9 @@ interface ChatSession {
 }
 
 import { Plus, Trash2, MessageSquare } from 'lucide-vue-next';
+import { fill } from '../utils/fill';
 
-const fill = (t: string, v: Record<string, string | number>) =>
-  Object.entries(v).reduce((s, [k, val]) => s.replace(`{${k}}`, String(val)), t);
+
 
 const props = withDefaults(
   defineProps<{

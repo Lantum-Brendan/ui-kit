@@ -109,6 +109,7 @@
 <script setup>
 import { computed, ref, watch } from 'vue';
 import { X } from 'lucide-vue-next';
+import { fill } from '../utils/fill';
 
 const props = defineProps({
   open: { type: Boolean, default: false },
@@ -140,8 +141,7 @@ const props = defineProps({
 
 defineEmits(['close']);
 
-const fill = (template, params) =>
-  template.replace(/\{(\w+)\}/g, (_, key) => params[key] ?? '');
+
 
 const visibleCount = ref(10);
 

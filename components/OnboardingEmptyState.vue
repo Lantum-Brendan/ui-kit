@@ -8,8 +8,8 @@
     >
       <defs>
         <radialGradient id="oe-backdrop-bloom" cx="100%" cy="30%" r="60%">
-          <stop offset="0%" stop-color="var(--surface-accent)" stop-opacity="0.4" />
-          <stop offset="100%" stop-color="var(--surface-accent)" stop-opacity="0" />
+          <stop offset="0%" stop-color="var(--surface-accent, var(--color-primary-lighter))" stop-opacity="0.4" />
+          <stop offset="100%" stop-color="var(--surface-accent, var(--color-primary-lighter))" stop-opacity="0" />
         </radialGradient>
       </defs>
       <circle cx="1100" cy="100" r="280" fill="url(#oe-backdrop-bloom)" />
@@ -21,8 +21,8 @@
           <svg class="illustration" viewBox="0 0 220 220" aria-hidden="true">
             <defs>
               <radialGradient id="oe-glow" cx="50%" cy="50%" r="55%">
-                <stop offset="0%" stop-color="var(--surface-accent)" stop-opacity="0.4" />
-                <stop offset="100%" stop-color="var(--surface-accent)" stop-opacity="0" />
+                <stop offset="0%" stop-color="var(--surface-accent, var(--color-primary-lighter))" stop-opacity="0.4" />
+                <stop offset="100%" stop-color="var(--surface-accent, var(--color-primary-lighter))" stop-opacity="0" />
               </radialGradient>
             </defs>
             <circle cx="110" cy="110" r="100" fill="url(#oe-glow)" />
@@ -31,7 +31,7 @@
               cy="110"
               r="82"
               fill="none"
-              stroke="var(--surface-accent)"
+              stroke="var(--surface-accent, var(--color-primary-lighter))"
               stroke-opacity="0.5"
               stroke-width="1"
               stroke-dasharray="3 4"
@@ -41,14 +41,14 @@
               cy="110"
               r="58"
               fill="none"
-              stroke="var(--surface-accent)"
+              stroke="var(--surface-accent, var(--color-primary-lighter))"
               stroke-opacity="0.65"
               stroke-width="1"
             />
-            <circle cx="110" cy="110" r="42" fill="var(--surface-accent)" />
-            <circle cx="195" cy="58" r="6" fill="var(--surface-accent)" opacity="0.9" />
-            <circle cx="36" cy="170" r="4" fill="var(--surface-accent)" opacity="0.75" />
-            <circle cx="172" cy="180" r="5" fill="var(--surface-accent)" opacity="0.65" />
+            <circle cx="110" cy="110" r="42" fill="var(--surface-accent, var(--color-primary-lighter))" />
+            <circle cx="195" cy="58" r="6" fill="var(--surface-accent, var(--color-primary-lighter))" opacity="0.9" />
+            <circle cx="36" cy="170" r="4" fill="var(--surface-accent, var(--color-primary-lighter))" opacity="0.75" />
+            <circle cx="172" cy="180" r="5" fill="var(--surface-accent, var(--color-primary-lighter))" opacity="0.65" />
           </svg>
           <div class="illustration-icon">
             <component :is="iconComponent" class="main-icon" />
@@ -296,7 +296,7 @@ const config = computed(() => onboardingConfigs[props.pageType]);
   font-weight: $font-bold;
   text-transform: uppercase;
   letter-spacing: 0.14em;
-  color: var(--surface-deep);
+  color: var(--surface-deep, var(--color-primary-dark));
   opacity: 0.85;
   margin-bottom: 2px;
 }
@@ -357,7 +357,7 @@ const config = computed(() => onboardingConfigs[props.pageType]);
 }
 
 .onboarding-title {
-  color: var(--surface-ink);
+  color: var(--surface-ink, var(--color-text-primary));
   font-size: 1.75rem;
   font-weight: $font-bold;
   letter-spacing: -0.025em;
@@ -374,7 +374,7 @@ const config = computed(() => onboardingConfigs[props.pageType]);
 }
 
 .onboarding-subtitle {
-  color: var(--surface-ink);
+  color: var(--surface-ink, var(--color-text-primary));
   opacity: 0.75;
   font-size: $font-size-base;
   margin: 0 0 1rem 0;
@@ -421,8 +421,8 @@ const config = computed(() => onboardingConfigs[props.pageType]);
 }
 
 .step-number {
-  background: var(--surface-deep);
-  color: var(--surface-bg);
+  background: var(--surface-deep, var(--color-primary-dark));
+  color: var(--surface-bg, var(--color-bg-white));
   width: 20px;
   height: 20px;
   border-radius: 6px;
@@ -506,7 +506,7 @@ const config = computed(() => onboardingConfigs[props.pageType]);
 }
 
 .tip-icon {
-  color: var(--surface-deep);
+  color: var(--surface-deep, var(--color-primary-dark));
   flex-shrink: 0;
   display: inline-flex;
 
@@ -517,7 +517,7 @@ const config = computed(() => onboardingConfigs[props.pageType]);
 }
 
 .tip-text {
-  color: var(--surface-ink);
+  color: var(--surface-ink, var(--color-text-primary));
   opacity: 0.8;
   font-size: 11px;
   font-weight: $font-medium;

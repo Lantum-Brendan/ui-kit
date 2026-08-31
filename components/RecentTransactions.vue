@@ -41,6 +41,7 @@
 <script setup>
 import { computed } from 'vue';
 import { ArrowDownLeft, ArrowUpRight, Receipt } from 'lucide-vue-next';
+import { fill } from '../utils/fill';
 
 const props = defineProps({
   transactions: {
@@ -70,8 +71,7 @@ defineEmits(['view-all', 'click-txn']);
 
 const recentTransactions = computed(() => props.transactions.slice(0, props.limit));
 
-const fill = (template, params) =>
-  template.replace(/\{(\w+)\}/g, (_, key) => params[key] ?? '');
+
 
 const formatRelativeTime = (dateStr) => {
   if (!dateStr) return '';

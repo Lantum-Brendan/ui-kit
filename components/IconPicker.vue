@@ -47,7 +47,7 @@
 
 <script setup>
 import { ref, computed, watch, onMounted, onBeforeUnmount, shallowRef, toRef, nextTick } from 'vue';
-import * as lucideIcons from 'lucide-vue-next';
+import { lucideMap } from '../utils/icons';
 import { XIcon, ChevronDown, ChevronUp } from 'lucide-vue-next';
 
 // props / emits
@@ -72,16 +72,10 @@ const showDropdown = ref(false);
 // helper accessor for template (unwrap shallowRef safely)
 const loadedIconsValue = computed(() => loadedIcons.value || {});
 
-// gather icon names on mount
+// gather icon names on mount - from curated map (shakeable)
 onMounted(() => {
   try {
-    allIconNames.value = Object.keys(lucideIcons).filter(
-      (key) =>
-        typeof lucideIcons[key] === 'function' &&
-        key !== 'default' &&
-        !key.startsWith('create') &&
-        key[0] === key[0].toUpperCase()
-    );
+    allIconNames.value = Object.keys(lucideMap);
   } catch (err) {
     console.error('IconPicker: failed to enumerate icons', err);
     allIconNames.value = [];
@@ -109,7 +103,7 @@ const filteredIcons = computed(() => {
 // safe getter for icon components
 function getIconComponent(iconName) {
   try {
-    const component = lucideIcons[iconName];
+    const component = lucideMap[iconName];
     return component && typeof component === 'function' ? component : null;
   } catch (err) {
     console.error('IconPicker: getIconComponent failed for', iconName, err);

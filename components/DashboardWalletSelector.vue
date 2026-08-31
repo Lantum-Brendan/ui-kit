@@ -130,19 +130,19 @@ onUnmounted(() => {
 }
 
 .wallet-icon {
-  color: var(--surface-deep);
+  color: var(--surface-deep, var(--color-primary-dark));
   flex-shrink: 0;
 }
 
 .wallet-name {
   font-size: $font-size-sm;
   font-weight: $font-semibold;
-  color: var(--surface-ink);
+  color: var(--surface-ink, var(--color-text-primary));
   white-space: nowrap;
 }
 
 .chevron {
-  color: var(--surface-deep);
+  color: var(--surface-deep, var(--color-primary-dark));
   transition: transform 0.2s;
 
   &.rotated {

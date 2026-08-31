@@ -14,6 +14,7 @@
 
 <script setup>
 import { computed } from 'vue';
+import { fill } from '../utils/fill';
 
 const props = defineProps({
   totals: { type: Object, required: true },
@@ -34,8 +35,7 @@ const props = defineProps({
   }
 });
 
-const fill = (template, vars) =>
-  Object.entries(vars).reduce((s, [k, v]) => s.replace(`{${k}}`, v), template);
+
 
 const savingsRate = computed(() => props.totals.savingsRate * 100);
 const expenseRatio = computed(() => props.totals.expenseRatio * 100);

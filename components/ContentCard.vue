@@ -32,7 +32,7 @@
 <script setup>
 import { computed } from 'vue';
 import { Edit as LucideEdit, Trash as LucideTrash } from 'lucide-vue-next';
-import * as LucideIcons from 'lucide-vue-next';
+import { lucideMap } from '../utils/icons';
 
 const props = defineProps({
   name: {
@@ -65,7 +65,7 @@ defineEmits(['edit', 'delete']);
 
 const resolvedIcon = computed(() => {
   if (!props.icon) return null;
-  return LucideIcons[props.icon] || LucideIcons.Box;
+  return lucideMap[props.icon] || lucideMap.Box;
 });
 </script>
 

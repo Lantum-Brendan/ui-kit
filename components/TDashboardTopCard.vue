@@ -108,7 +108,7 @@ defineEmits(['period-change', 'toggle-custom']);
 
   .amb {
     position: absolute;
-    color: var(--surface-deep);
+    color: var(--surface-deep, var(--color-primary-dark));
     opacity: 0.07;
   }
   .a1 { top: -10px; right: 6%; transform: rotate(-10deg); }
@@ -142,7 +142,7 @@ defineEmits(['period-change', 'toggle-custom']);
 
 .hero-title {
   margin: 0;
-  color: var(--surface-ink);
+  color: var(--surface-ink, var(--color-text-primary));
   font-size: $font-size-lg;
   font-weight: $font-bold;
   letter-spacing: -0.015em;
@@ -155,7 +155,7 @@ defineEmits(['period-change', 'toggle-custom']);
 
 .hero-sub {
   margin: 0;
-  color: var(--surface-ink);
+  color: var(--surface-ink, var(--color-text-primary));
   opacity: 0.7;
   font-size: $font-size-sm;
 
@@ -197,7 +197,7 @@ defineEmits(['period-change', 'toggle-custom']);
   padding: 0 14px;
   border: none;
   background: transparent;
-  color: var(--surface-deep);
+  color: var(--surface-deep, var(--color-primary-dark));
   border-radius: 999px;
   font-size: $font-size-sm;
   font-weight: $font-semibold;
@@ -209,7 +209,7 @@ defineEmits(['period-change', 'toggle-custom']);
 
   &:hover:not(.chip--active) {
     background: var(--hover-overlay);
-    color: var(--surface-ink);
+    color: var(--surface-ink, var(--color-text-primary));
   }
 
   &--active {

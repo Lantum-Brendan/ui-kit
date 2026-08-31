@@ -68,6 +68,7 @@
 import { computed } from 'vue';
 import { ArrowUpRight, ArrowDownRight, Minus, ChevronRight, Inbox } from 'lucide-vue-next';
 import SparkLine from './SparkLine.vue';
+import { fill } from '../utils/fill';
 
 const props = defineProps({
   title: { type: String, default: '' },
@@ -87,8 +88,7 @@ const props = defineProps({
 
 defineEmits(['drill']);
 
-const fill = (template, vars) =>
-  Object.entries(vars).reduce((s, [k, v]) => s.replace(`{${k}}`, v), template);
+
 
 const max = computed(() => Math.max(1, ...props.buckets.map((b) => b.amount)));
 </script>

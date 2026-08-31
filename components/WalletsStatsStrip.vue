@@ -21,6 +21,7 @@
 <script setup>
 import { computed } from 'vue';
 import { Wallet, Coins, ArrowDownLeft, ArrowUpRight } from 'lucide-vue-next';
+import { fill } from '../utils/fill';
 
 const props = defineProps({
   wallets: { type: Array, required: true },
@@ -43,8 +44,7 @@ const props = defineProps({
   }
 });
 
-const fill = (template, vars) =>
-  template.replace(/\{(\w+)\}/g, (_, k) => (vars[k] !== undefined ? vars[k] : `{${k}}`));
+
 
 const inDefaultCurrency = computed(() =>
   props.wallets.filter((w) => w.currency === props.defaultCurrency)
@@ -170,7 +170,7 @@ const stats = computed(() => [
   border-radius: 8px;
   background: var(--glass-bg);
   border: 1px solid $border-light;
-  color: var(--surface-deep);
+  color: var(--surface-deep, var(--color-primary-dark));
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -190,7 +190,7 @@ const stats = computed(() => [
   font-weight: $font-bold;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  color: var(--surface-deep);
+  color: var(--surface-deep, var(--color-primary-dark));
   opacity: 0.85;
 }
 
@@ -198,7 +198,7 @@ const stats = computed(() => [
   margin: 0;
   font-size: $font-size-sm;
   font-weight: $font-bold;
-  color: var(--surface-ink);
+  color: var(--surface-ink, var(--color-text-primary));
   letter-spacing: -0.005em;
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
@@ -208,7 +208,7 @@ const stats = computed(() => [
 
 .stat-sub {
   font-size: 10px;
-  color: var(--surface-ink);
+  color: var(--surface-ink, var(--color-text-primary));
   opacity: 0.6;
   font-variant-numeric: tabular-nums;
   white-space: nowrap;

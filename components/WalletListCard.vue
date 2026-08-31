@@ -56,7 +56,7 @@
 <script setup>
 import { ref, computed, onMounted, onUnmounted } from 'vue';
 import { MoreVertical, Edit, Trash, Wallet, ArrowDownLeft, ArrowUpRight } from 'lucide-vue-next';
-import * as LucideIcons from 'lucide-vue-next';
+import { lucideMap } from '../utils/icons';
 const getCurrencySymbol = (code) => {
   try {
     const parts = new Intl.NumberFormat('en-US', { style: 'currency', currency: code || 'USD' })
@@ -112,7 +112,7 @@ const handleDelete = () => {
 const resolvedIcon = computed(() => {
   const iconValue = props.wallet.icon?.path || props.wallet.icon?.content || props.wallet.icon;
   if (!iconValue) return null;
-  return LucideIcons[iconValue] || null;
+  return lucideMap[iconValue] || null;
 });
 
 const formatCurrency = (value) => {

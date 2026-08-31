@@ -66,7 +66,8 @@ import {
   Edit as LucideEdit,
   Trash as LucideTrash
 } from 'lucide-vue-next';
-import * as LucideIcons from 'lucide-vue-next';
+import { lucideMap } from '../utils/icons';
+import { fill } from '../utils/fill';
 
 const props = defineProps({
   party: {
@@ -203,18 +204,18 @@ const resolvedIcon = computed(() => {
 
   if (!iconValue) {
     // Default icons based on party type
-    return props.party.type === 'individual' ? LucideIcons.User : LucideIcons.Building2;
+    return props.party.type === 'individual' ? lucideMap.User : lucideMap.Building2;
   }
 
   // Try to get the icon from Lucide icons library
-  const iconComponent = LucideIcons[iconValue];
+  const iconComponent = lucideMap[iconValue];
 
   if (iconComponent) {
     return iconComponent;
   }
 
   // If not found, try to find a similar icon by searching through available icons
-  const availableIcons = Object.keys(LucideIcons);
+  const availableIcons = Object.keys(lucideMap);
   const similarIcon = availableIcons.find(
     (iconName) =>
       iconName.toLowerCase().includes(iconValue.toLowerCase()) ||
@@ -222,17 +223,17 @@ const resolvedIcon = computed(() => {
   );
 
   if (similarIcon) {
-    return LucideIcons[similarIcon];
+    return lucideMap[similarIcon];
   }
 
   // Fallback to default icons based on party type
-  return props.party.type === 'individual' ? LucideIcons.User : LucideIcons.Building2;
+  return props.party.type === 'individual' ? lucideMap.User : lucideMap.Building2;
 });
 
 const formatLastUpdated = (timestamp) => {
-  const fill = (template, count) => template.replace('{count}', count);
 
-  if (!timestamp) return fill(props.relativeLabels.fallback, 1);
+
+  if (!timestamp) return fill(props.relativeLabels.fallback, { count: 1 });
 
   const now = new Date();
   const updated = new Date(timestamp);
@@ -242,10 +243,10 @@ const formatLastUpdated = (timestamp) => {
   const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
   const diffWeeks = Math.floor(diffMs / (1000 * 60 * 60 * 24 * 7));
 
-  if (diffMins < 60) return fill(props.relativeLabels.m, diffMins);
-  if (diffHours < 24) return fill(props.relativeLabels.h, diffHours);
-  if (diffDays < 7) return fill(props.relativeLabels.d, diffDays);
-  return fill(props.relativeLabels.w, diffWeeks);
+  if (diffMins < 60) return fill(props.relativeLabels.m, { count: diffMins });
+  if (diffHours < 24) return fill(props.relativeLabels.h, { count: diffHours });
+  if (diffDays < 7) return fill(props.relativeLabels.d, { count: diffDays });
+  return fill(props.relativeLabels.w, { count: diffWeeks });
 };
 </script>
 

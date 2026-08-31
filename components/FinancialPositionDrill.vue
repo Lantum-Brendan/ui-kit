@@ -81,6 +81,7 @@
 import { computed } from 'vue';
 import { X, ArrowLeft, Inbox, ArrowDownLeft, ArrowUpRight } from 'lucide-vue-next';
 import LoadingSkeleton from './LoadingSkeleton.vue';
+import { fill } from '../utils/fill';
 
 const INTENT_LABELS = {
   regular: 'Regular',
@@ -114,8 +115,7 @@ const props = defineProps({
 
 defineEmits(['close']);
 
-const fill = (template, params) =>
-  template.replace(/\{(\w+)\}/g, (_, key) => params[key] ?? '');
+
 
 const buckets = computed(() => {
   const order = props.group?.intents ?? [];
@@ -165,8 +165,8 @@ const buckets = computed(() => {
   align-items: center;
   gap: $spacing-3;
   padding: $spacing-4 $spacing-5;
-  background: var(--surface-bg);
-  border-bottom: 1px solid var(--surface-accent);
+  background: var(--surface-bg, var(--color-bg-white));
+  border-bottom: 1px solid var(--surface-accent, var(--color-primary-lighter));
 }
 
 .icon-btn {
@@ -205,7 +205,7 @@ const buckets = computed(() => {
   flex-shrink: 0;
   border-radius: 13px;
   background: var(--glass-bg-strong);
-  color: var(--surface-deep);
+  color: var(--surface-deep, var(--color-primary-dark));
 }
 
 .head-id {
@@ -219,7 +219,7 @@ const buckets = computed(() => {
   font-weight: $font-bold;
   text-transform: uppercase;
   letter-spacing: 0.1em;
-  color: var(--surface-deep);
+  color: var(--surface-deep, var(--color-primary-dark));
 }
 
 .head-title {
@@ -234,8 +234,8 @@ const buckets = computed(() => {
 
 .detail-hero {
   padding: $spacing-5;
-  background: var(--surface-bg);
-  border-bottom: 1px solid var(--surface-accent);
+  background: var(--surface-bg, var(--color-bg-white));
+  border-bottom: 1px solid var(--surface-accent, var(--color-primary-lighter));
 }
 
 .detail-metric {
