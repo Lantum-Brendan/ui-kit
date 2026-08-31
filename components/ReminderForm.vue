@@ -199,7 +199,7 @@ watch(
 
       if (item.trigger_at) {
         const date = new Date(item.trigger_at);
-        form.trigger_at = date.toISOString().slice(0, 16);
+        form.trigger_at = toLocalDateTimeString(date);
       }
 
       if (item.repeat_rule) {
@@ -228,11 +228,16 @@ function resetForm() {
   repeatOption.value = 'none';
 }
 
+function toLocalDateTimeString(date) {
+  const pad = (n) => String(n).padStart(2, '0');
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
+}
+
 function getDefaultDateTime() {
   const now = new Date();
   now.setHours(now.getHours() + 1);
   now.setMinutes(0);
-  return now.toISOString().slice(0, 16);
+  return toLocalDateTimeString(now);
 }
 
 function handleSubmit() {

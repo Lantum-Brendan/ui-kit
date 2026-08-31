@@ -160,9 +160,20 @@ const props = defineProps({
 
 const emit = defineEmits(['submit']);
 
+function toLocalDateString(d) {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+}
+function toLocalTimeString(d) {
+  const h = String(d.getHours()).padStart(2, '0');
+  const mi = String(d.getMinutes()).padStart(2, '0');
+  return `${h}:${mi}`;
+}
 const now = new Date();
-const formDate = ref(now.toISOString().slice(0, 10));
-const formTime = ref(now.toTimeString().slice(0, 5));
+const formDate = ref(toLocalDateString(now));
+const formTime = ref(toLocalTimeString(now));
 const formAmount = ref('');
 const exchangeRate = ref<string>('');
 
