@@ -55,6 +55,11 @@
   --color-expense-soft: rgba(225, 29, 72, 0.12);
   --color-neutral-soft: rgba(99, 102, 241, 0.12);
   --color-chart-grid: rgba(15, 23, 42, 0.08);
+  --color-error-light: #fee2e2;
+  --surface-bg: var(--color-bg-white);
+  --surface-deep: var(--color-primary-dark);
+  --surface-ink: var(--color-text-primary);
+  --surface-accent: var(--color-primary-lighter);
   --glass-bg: rgba(255, 255, 255, 0.78);
   --glass-bg-strong: rgba(255, 255, 255, 0.92);
   --hover-overlay: rgba(0, 0, 0, 0.06);
@@ -118,6 +123,11 @@
   --color-expense-soft: rgba(251, 113, 133, 0.18);
   --color-neutral-soft: rgba(165, 180, 252, 0.16);
   --color-chart-grid: rgba(226, 232, 240, 0.08);
+  --color-error-light: #7f1d1d;
+  --surface-bg: var(--color-bg-white);
+  --surface-deep: var(--color-primary-dark);
+  --surface-ink: var(--color-text-primary);
+  --surface-accent: var(--color-primary-lighter);
   --glass-bg: rgba(255, 255, 255, 0.14);
   --glass-bg-strong: rgba(255, 255, 255, 0.26);
   --hover-overlay: rgba(255, 255, 255, 0.08);

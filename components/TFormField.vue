@@ -45,29 +45,29 @@ withDefaults(
     grid-column: 1 / -1;
   }
 
-  __label {
+  &__label {
     font-size: $font-size-sm;
     font-weight: $font-semibold;
     color: $text-primary;
     margin: 0;
   }
 
-  __required {
+  &__required {
     color: $error-color;
     margin-left: 0.125rem;
   }
 
-  __control {
+  &__control {
     width: 100%;
   }
 
-  __error {
+  &__error {
     font-size: $font-size-xs;
     color: $error-color;
     margin: 0;
   }
 
-  __hint {
+  &__hint {
     font-size: $font-size-xs;
     color: $text-muted;
     margin: 0;

@@ -121,6 +121,13 @@ $expense-soft: var(--color-expense-soft);
 $neutral-soft: var(--color-neutral-soft);
 $chart-grid: var(--color-chart-grid);
 
+// Surface tokens (fallback for kit standalone; host overrides via tokens.css)
+$surface-bg: var(--surface-bg, var(--color-bg-white));
+$surface-deep: var(--surface-deep, var(--color-primary-dark));
+$surface-ink: var(--surface-ink, var(--color-text-primary));
+$surface-accent: var(--surface-accent, var(--color-primary-lighter));
+$color-error-light: var(--color-error-light, #fee2e2);
+
 // Transitions
 $transition-base: all 0.2s ease-in-out;
 
