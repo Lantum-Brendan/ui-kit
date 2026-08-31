@@ -13,8 +13,16 @@ const NuxtLink = {
   },
 };
 
+// ClientOnly stand-in for mounting outside Nuxt.
+const ClientOnly = {
+  name: 'ClientOnly',
+  setup(props, { slots }) {
+    return () => slots.default?.();
+  },
+};
+
 Cypress.Commands.add('mount', (component, options = {}) => {
   options.global = options.global || {};
-  options.global.components = { NuxtLink, ...(options.global.components || {}) };
+  options.global.components = { NuxtLink, ClientOnly, ...(options.global.components || {}) };
   return mount(component, options);
 });

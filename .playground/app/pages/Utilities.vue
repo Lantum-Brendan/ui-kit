@@ -95,7 +95,7 @@ const viewMode = ref('grid');
 const menuOpen = ref(false);
 
 const handleSearch = (value) => {
-  console.log('Search query:', value);
+  searchQuery.value = value;
 };
 </script>
 

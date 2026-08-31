@@ -20,7 +20,7 @@ describe('CategoryRanking', () => {
   });
 
   it('renders rows with name and amount', () => {
-    cy.mount(CategoryRanking, { props: { buckets } });
+    cy.mount(CategoryRanking, { props: { buckets, formatter: (n) => `$${n}` } });
     cy.get('.rank-list .row').should('have.length', 2);
     cy.contains('.row-name', 'Food').should('exist');
     cy.contains('.row-amount', '$500').should('exist');

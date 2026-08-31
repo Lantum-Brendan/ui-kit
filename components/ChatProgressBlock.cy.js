@@ -22,7 +22,11 @@ describe('ChatProgressBlock', () => {
   });
 
   it('sets width style and fill class based on ratio', () => {
-    cy.mount(ChatProgressBlock, { props: { items } });
+    const mixed = [
+      { label: 'Ok', current: 250, target: 500 },
+      { label: 'Over', current: 1200, target: 1000 }
+    ];
+    cy.mount(ChatProgressBlock, { props: { items: mixed } });
     cy.get('.progress-fill').eq(0).should('have.attr', 'style').and('contain', 'width');
     cy.get('.progress-fill.is-ok').should('exist');
     cy.get('.progress-fill.is-over').should('exist');

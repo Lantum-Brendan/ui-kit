@@ -29,7 +29,7 @@ describe('DescriptorRenderer', () => {
   });
 
   it('renders sidebar.nav variant', () => {
-    const nav = { ...baseContribution, slot: 'sidebar.nav', ui: { ...baseContribution.ui, card: { href: '/nav' } } };
+    const nav = { ...baseContribution, slot: 'sidebar.nav', ui: { ...baseContribution.ui, card: { ...baseContribution.ui.card, href: '/nav' } } };
     cy.mount(DescriptorRenderer, { props: { contribution: nav } });
     cy.get('.ext-nav-item').should('exist');
     cy.get('.ext-nav-label').should('contain.text', 'Card Title');
@@ -50,7 +50,12 @@ describe('DescriptorRenderer', () => {
   });
 
   it('renders resolved component when provided', () => {
-    const MyComp = { props: ['contribution'], template: '<div class="my-resolved">Resolved {{ contribution.key }}</div>' };
+    const MyComp = {
+      props: ['contribution'],
+      render() {
+        return h('div', { class: 'my-resolved' }, `Resolved ${this.contribution.key}`);
+      }
+    };
     const withResolve = { ...baseContribution, ui: { ...baseContribution.ui, component: 'my-comp' } };
     cy.mount(DescriptorRenderer, {
       props: { contribution: withResolve, resolveComponent: (key) => key === 'my-comp' ? MyComp : null }

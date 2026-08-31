@@ -13,7 +13,7 @@ export default {
     const hasVue = plugins.some((p) => p && p.name === 'vite:vue');
     if (!hasVue) {
       const vue = (await import('@vitejs/plugin-vue')).default;
-      config.plugins = [...(config.plugins || []), vue()];
+      config.plugins = [vue(), ...(config.plugins || [])];
     }
     return config;
   },

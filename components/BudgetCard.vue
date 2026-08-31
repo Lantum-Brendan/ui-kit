@@ -101,17 +101,29 @@ import {
   WalletIcon
 } from '@heroicons/vue/24/outline';
 
-const props = defineProps<{
-  budget: any;
-  labels?: {
-    edit: string;
-    delete: string;
-    allTransactionsInPeriod: string;
-    of: string;
-    remaining: string;
-    refundsAppliedThisPeriod: string;
-  };
-}>();
+const props = withDefaults(
+  defineProps<{
+    budget: any;
+    labels?: {
+      edit?: string;
+      delete?: string;
+      allTransactionsInPeriod?: string;
+      of?: string;
+      remaining?: string;
+      refundsAppliedThisPeriod?: string;
+    };
+  }>(),
+  {
+    labels: () => ({
+      edit: 'Edit',
+      delete: 'Delete',
+      allTransactionsInPeriod: 'All transactions in period',
+      of: 'of',
+      remaining: 'Remaining',
+      refundsAppliedThisPeriod: 'Refunds applied this period'
+    })
+  }
+);
 defineEmits<{
   (e: 'edit' | 'delete', budget: any): void;
 }>();
