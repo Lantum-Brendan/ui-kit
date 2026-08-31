@@ -226,7 +226,7 @@ const formatCurrency = (value) => {
   background: var(--glass-bg);
   border: 1px solid $border-light;
   border-radius: 10px;
-  color: var(--surface-deep);
+  color: var(--surface-deep, var(--color-primary-dark));
   cursor: pointer;
   backdrop-filter: blur(6px);
   transition:
@@ -264,7 +264,7 @@ const formatCurrency = (value) => {
   backdrop-filter: blur(6px);
 
   .total-label {
-    color: var(--surface-ink);
+    color: var(--surface-ink, var(--color-text-primary));
     opacity: 0.7;
     font-weight: $font-semibold;
     text-transform: uppercase;
@@ -274,7 +274,7 @@ const formatCurrency = (value) => {
 
   .total-value {
     font-weight: $font-bold;
-    color: var(--surface-ink);
+    color: var(--surface-ink, var(--color-text-primary));
 
     &.income {
       color: var(--color-income);

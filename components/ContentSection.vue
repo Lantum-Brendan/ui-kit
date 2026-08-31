@@ -6,7 +6,7 @@
     @add="handleOpenFormForCreation"
   />
   <div class="content-area">
-    <div v-if="showForm" class="form-section">
+    <div v-if="showForm" ref="formSectionRef" class="form-section">
       <div class="form-wrapper">
         <component
           :is="currentForm"
@@ -69,6 +69,10 @@ const props = defineProps({
   isTabletOrBelow: {
     type: Boolean,
     default: false
+  },
+  items: {
+    type: Array,
+    default: undefined
   }
 });
 
@@ -78,9 +82,14 @@ const { pageName, pageNamePlural } = toRefs(props);
 // Responsive flags
 const { isTabletOrBelow } = toRefs(props);
 
+const emit = defineEmits(['update:items', 'created', 'updated', 'deleted', 'view', 'menu']);
+
 const showForm = ref(false);
-const items = ref([]);
+const internalItems = ref([]);
+const isControlled = computed(() => props.items !== undefined);
+const items = computed(() => (isControlled.value ? props.items : internalItems.value));
 const editingItem = ref(null);
+const formSectionRef = ref(null);
 
 const isGroupsPage = computed(() => props.pageName === 'Group');
 const isPartiesPage = computed(() => props.pageName === 'Party');
@@ -102,9 +111,8 @@ const handleOpenFormForCreation = () => {
 
     // Scroll to the form after a brief delay to ensure it's rendered
     nextTick(() => {
-      const formSection = document.querySelector('.form-section');
-      if (formSection) {
-        formSection.scrollIntoView({
+      if (formSectionRef.value) {
+        formSectionRef.value.scrollIntoView({
           behavior: 'smooth',
           block: 'start',
           inline: 'nearest'
@@ -123,14 +131,14 @@ const handleCreate = (newItem) => {
   const itemWithId = {
     ...newItem,
     id: crypto.randomUUID(),
-    createdAt: new Date().toISOString(),
-    ...(props.pageName === 'Party' && {
-      receivedAmount: Math.floor(Math.random() * 5000),
-      spentAmount: Math.floor(Math.random() * 3000),
-      lastUpdated: new Date()
-    })
+    createdAt: new Date().toISOString()
   };
-  items.value.push(itemWithId);
+  if (isControlled.value) {
+    emit('created', itemWithId);
+    emit('update:items', [...props.items, itemWithId]);
+  } else {
+    internalItems.value.push(itemWithId);
+  }
   // Auto-close form after successful creation
   handleFormClose();
 };
@@ -144,9 +152,8 @@ const handleEdit = (itemToEdit) => {
 
   // 3. Scroll to the form after a brief delay to ensure it's rendered
   nextTick(() => {
-    const formSection = document.querySelector('.form-section');
-    if (formSection) {
-      formSection.scrollIntoView({
+    if (formSectionRef.value) {
+      formSectionRef.value.scrollIntoView({
         behavior: 'smooth',
         block: 'start',
         inline: 'nearest'
@@ -156,17 +163,31 @@ const handleEdit = (itemToEdit) => {
 };
 
 const handleUpdate = (updatedItem) => {
-  const index = items.value.findIndex((item) => item.id === updatedItem.id);
-  if (index !== -1) {
-    items.value[index] = { ...items.value[index], ...updatedItem };
+  if (isControlled.value) {
+    const next = props.items.map((item) => (item.id === updatedItem.id ? { ...item, ...updatedItem } : item));
+    emit('updated', updatedItem);
+    emit('update:items', next);
+  } else {
+    const index = internalItems.value.findIndex((item) => item.id === updatedItem.id);
+    if (index !== -1) {
+      internalItems.value[index] = { ...internalItems.value[index], ...updatedItem };
+    }
   }
   // Close the form after update
   handleFormClose();
 };
 
 const handleDelete = (itemToDelete) => {
-  items.value = items.value.filter((item) => item.id !== itemToDelete.id);
+  if (isControlled.value) {
+    emit('deleted', itemToDelete);
+    emit('update:items', props.items.filter((item) => item.id !== itemToDelete.id));
+  } else {
+    internalItems.value = internalItems.value.filter((item) => item.id !== itemToDelete.id);
+  }
 };
+
+const handleView = (item) => emit('view', item);
+const handleMenu = (payload) => emit('menu', payload);
 </script>
 
 <style lang="scss" scoped>
