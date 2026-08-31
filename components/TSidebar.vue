@@ -26,52 +26,29 @@
       </button>
     </div>
 
-    <nav class="sidebar-nav">
-      <ul>
-        <li v-for="item in primary" :key="item.to">
-          <button
-            type="button"
-            class="nav-button"
-            :class="{
-              'nav-button--with-subtext': !isCompact && item.hint,
-              'nav-button--compact': isCompact,
-              selected: currentPath === item.to || currentPath.startsWith(item.to + '/')
-            }"
-            :title="isCompact ? `${labels[item.labelKey] || item.label}: ${labels[item.hintKey] || item.hint || ''}` : undefined"
-            @click="handleNavClick(item.to)"
-          >
-            <component :is="item.icon" class="icon" />
-            <div v-if="!isCompact && item.hint" class="nav-copy">
-              <span class="text">{{ labels[item.labelKey] || item.label }}</span>
-              <span class="subtext">{{ labels[item.hintKey] || item.hint }}</span>
-            </div>
-            <span v-else-if="!isCompact" class="text">{{ labels[item.labelKey] || item.label }}</span>
-            <span v-else class="compact-label">{{ labels[item.labelKey] || item.label }}</span>
-          </button>
+    <TSidebarRail
+      :items="primary"
+      :active-id="currentPath"
+      :collapsed="isCompact"
+      :labels="labels"
+      @select="handleNavClick"
+    />
 
-          <ul
-            v-if="!isCompact && item.subItems && (currentPath === item.to || currentPath.startsWith(item.to + '/'))"
-            class="sub-list"
-          >
-            <li v-for="sub in item.subItems" :key="sub.label">
-              <button
-                type="button"
-                class="sub-link"
-                :class="{ selected: isSubActive(item.to, sub) }"
-                @click="handleNavClick(sub.to || item.to)"
-              >
-                <span class="dot" :class="`dot--${sub.tone}`" />
-                <span>{{ labels[sub.labelKey] || sub.label }}</span>
-              </button>
-            </li>
-          </ul>
-        </li>
-      </ul>
+    <template v-for="item in primary" :key="item.to + '-sub'">
+      <TSidebarSub
+        v-if="!isCompact && item.subItems && (currentPath === item.to || currentPath.startsWith(item.to + '/'))"
+        :sub-items="item.subItems"
+        :active-id="currentPath"
+        :parent-to="item.to"
+        :labels="labels"
+        @select="handleNavClick"
+        @close="$emit('close-sidebar')"
+      />
+    </template>
 
-      <div v-if="!isCompact" class="sidebar-ext">
-        <slot name="extension-nav" />
-      </div>
-    </nav>
+    <div v-if="!isCompact" class="sidebar-ext">
+      <slot name="extension-nav" />
+    </div>
 
     <hr v-if="!isCompact" class="divider" />
 
@@ -131,6 +108,8 @@ import {
 } from '@heroicons/vue/24/outline';
 import { Sparkles, Scale, Coins } from 'lucide-vue-next';
 import Logo from './Logo.vue';
+import TSidebarRail from './TSidebarRail.vue';
+import TSidebarSub from './TSidebarSub.vue';
 
 const props = defineProps({
   currentPath: { type: String, default: '/dashboard' },
@@ -199,11 +178,6 @@ const footer = [
   { to: '/imports', label: 'Import', labelKey: 'imports', icon: ArrowUpTrayIcon },
   { to: '/settings', label: 'Settings', labelKey: 'settings', icon: Cog8ToothIcon }
 ];
-
-const isSubActive = (parentTo, sub) => {
-  if (sub.to) return props.currentPath === sub.to;
-  return props.currentPath === parentTo;
-};
 
 const handleNavClick = (to) => {
   emit('navigate', to);
@@ -287,64 +261,10 @@ const handleNavClick = (to) => {
     }
   }
 
-  &-nav {
-    flex: 1 1 auto;
-    min-height: 0;
+  .sidebar-ext {
+    flex: 0 0 auto;
     width: 100%;
-    overflow-y: auto;
-    overflow-x: hidden;
-    padding-bottom: 8px;
-    ul {
-      list-style: none;
-      padding: 0;
-      margin: 0;
-      width: 100%;
-    }
-    li {
-      width: 100%;
-    }
-  }
-
-  .nav-button {
-    display: flex;
-    align-items: center;
-    width: calc(100% - 20px);
-    min-height: 44px;
-    border-radius: $radius-xl;
-    padding: 8px 10px;
-    gap: 12px;
-    background-color: transparent;
-    border: none;
-    color: $text-secondary;
-    text-align: left;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    margin-left: 10px;
-    position: relative;
-    text-decoration: none;
-
-    &:hover:not(.selected) {
-      background-color: rgba(var(--color-primary-rgb), 0.15);
-    }
-
-    &.selected {
-      background-color: $primary-light;
-
-      .subtext {
-        color: $text-secondary;
-      }
-    }
-  }
-
-  .nav-button--with-subtext {
-    align-items: flex-start;
-  }
-
-  .nav-copy {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-    min-width: 0;
+    padding: 8px 0 0;
   }
 
   .text {
@@ -366,7 +286,6 @@ const handleNavClick = (to) => {
     margin-top: 2px;
   }
 
-  &--compact .nav-button,
   &--compact .nav-footer-button {
     flex-direction: column;
     justify-content: center;
@@ -478,69 +397,6 @@ const handleNavClick = (to) => {
 
     &.selected {
       background-color: $primary-light;
-    }
-  }
-
-  .sub-list {
-    list-style: none;
-    margin: 4px 10px 8px 46px;
-    padding: 0 0 0 10px;
-    border-left: 2px solid $border-color;
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-  }
-
-  .sub-link {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 6px 10px;
-    border-radius: $radius-md;
-    font-size: $font-size-sm;
-    color: $text-secondary;
-    text-decoration: none;
-    background: transparent;
-    border: none;
-    cursor: pointer;
-    width: 100%;
-    text-align: left;
-    transition: background-color 0.15s ease;
-
-    .dot {
-      width: 5px;
-      height: 5px;
-      border-radius: 50%;
-      flex-shrink: 0;
-
-      &--success {
-        background: var(--color-success);
-      }
-      &--error {
-        background: var(--color-error);
-      }
-      &--info {
-        background: var(--color-info);
-      }
-      &--muted {
-        background: $text-muted;
-        opacity: 0.4;
-      }
-      &--neutral {
-        background: $primary-muted;
-      }
-    }
-
-    &:hover:not(.selected) {
-      background-color: rgba(var(--color-primary-rgb), 0.08);
-      color: $primary;
-    }
-
-    &.selected {
-      background-color: $bg-white;
-      color: $primary;
-      font-weight: $font-semibold;
-      box-shadow: var(--shadow-sm);
     }
   }
 }

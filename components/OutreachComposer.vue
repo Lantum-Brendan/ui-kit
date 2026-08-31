@@ -1,34 +1,14 @@
 <template>
   <div class="composer">
     <form class="composer__form" @submit.prevent="onSend">
-      <label class="field">
-        <span class="field__label">{{ labels.subject }}</span>
-        <input v-model="form.subject" class="field__input" :placeholder="labels.subject" required />
-      </label>
-
-      <div class="field">
-        <span class="field__label">{{ labels.message }}</span>
-        <div class="md-toolbar">
-          <button
-            v-for="f in formats"
-            :key="f.label"
-            type="button"
-            class="md-btn"
-            :title="labels.formatLabels[f.key] || f.label"
-            @click="f.action()"
-          >
-            <component :is="f.icon" class="md-btn__icon" />
-          </button>
-        </div>
-        <textarea
-          ref="bodyRef"
-          v-model="form.body"
-          class="field__textarea"
-          rows="8"
-          :placeholder="labels.messagePlaceholder"
-          required
-        />
-      </div>
+      <OutreachComposerMessage
+        :subject="form.subject"
+        :message="form.body"
+        :preview-html="previewHtml"
+        :labels="labels"
+        @update:subject="form.subject = $event"
+        @update:message="form.body = $event"
+      />
 
       <div class="field">
         <span class="field__label">{{ labels.headerImage }}</span>
@@ -43,19 +23,6 @@
           <span>{{ imageUploading ? labels.uploading : labels.addCampaignImage }}</span>
           <input type="file" accept="image/*" class="upload__input" @change="onImage" />
         </label>
-      </div>
-
-      <div class="tokens">
-        <span class="tokens__hint">{{ labels.personalizeWith }}</span>
-        <button
-          v-for="token in tokens"
-          :key="token"
-          type="button"
-          class="token"
-          @click="insertToken(token)"
-        >
-          {{ token }}
-        </button>
       </div>
 
       <div class="cta-row">
@@ -73,28 +40,15 @@
         </label>
       </div>
 
-      <label class="field">
-        <span class="field__label">{{ labels.audience }}</span>
-        <select v-model="form.audience" class="field__input">
-          <option v-for="opt in audiences" :key="opt.value" :value="opt.value">
-            {{ labels.audienceOptions[opt.value] || opt.label }}
-          </option>
-        </select>
-      </label>
-
-      <div v-if="form.audience === 'specific'" class="field">
-        <span class="field__label">{{ labels.chooseRecipients }}</span>
-        <input v-model="userQuery" class="field__input" :placeholder="labels.searchUsers" />
-        <div class="recipients">
-          <label v-for="u in filteredUsers" :key="u.id" class="recipient">
-            <input v-model="form.user_ids" type="checkbox" :value="u.id" />
-            <span class="recipient__text"
-              >{{ u.first_name }} {{ u.last_name }} · {{ u.email }}</span
-            >
-          </label>
-          <p v-if="!filteredUsers.length" class="recipients__empty">{{ labels.noMatches }}</p>
-        </div>
-      </div>
+      <OutreachComposerAudience
+        :audiences="audiences"
+        :selected-audience="form.audience"
+        :users="users"
+        :selected-user-ids="form.user_ids"
+        :labels="labels"
+        @update:selectedAudience="form.audience = $event"
+        @update:selectedUserIds="form.user_ids = $event"
+      />
 
       <div class="field">
         <span class="field__label">{{ labels.attachments }}</span>
@@ -139,36 +93,15 @@
         />
       </div>
     </form>
-
-    <aside class="preview">
-      <span class="preview__tag">{{ labels.livePreview }}</span>
-      <div class="preview__frame">
-        <iframe
-          v-if="previewHtml"
-          :srcdoc="previewHtml"
-          class="preview__iframe"
-          sandbox=""
-          :title="labels.livePreview"
-        />
-        <p v-else class="preview__empty">{{ labels.startTypingPreview }}</p>
-      </div>
-    </aside>
   </div>
 </template>
 
 <script setup>
-import { ref, reactive, computed, watch, nextTick } from 'vue';
-import {
-  Image as ImageIcon,
-  Paperclip as PaperclipIcon,
-  Bold as BoldIcon,
-  Italic as ItalicIcon,
-  Heading2 as HeadingIcon,
-  List as ListIcon,
-  ListOrdered as ListOrderedIcon,
-  Link2 as LinkIcon
-} from 'lucide-vue-next';
+import { ref, reactive, computed, watch } from 'vue';
+import { Image as ImageIcon, Paperclip as PaperclipIcon } from 'lucide-vue-next';
 import TButton from './TButton.vue';
+import OutreachComposerAudience from './OutreachComposerAudience.vue';
+import OutreachComposerMessage from './OutreachComposerMessage.vue';
 
 const props = defineProps({
   users: { type: Array, default: () => [] },
@@ -223,8 +156,6 @@ const props = defineProps({
 
 const emit = defineEmits(['send', 'upload-image', 'preview-change']);
 
-const tokens = ['{{first_name}}', '{{last_name}}', '{{name}}', '{{email}}'];
-
 const form = reactive({
   subject: '',
   body: '',
@@ -245,16 +176,6 @@ const audiences = [
 ];
 
 const confirming = ref(false);
-const userQuery = ref('');
-
-const filteredUsers = computed(() => {
-  const q = userQuery.value.trim().toLowerCase();
-  const list = props.users;
-  if (!q) return list.slice(0, 50);
-  return list
-    .filter((u) => `${u.first_name} ${u.last_name} ${u.email}`.toLowerCase().includes(q))
-    .slice(0, 50);
-});
 
 const onImage = (event) => {
   const file = event.target.files?.[0];
@@ -291,48 +212,6 @@ const confirmText = computed(() => {
   return props.labels.confirmTextTemplate.replace('{audience}', label);
 });
 
-const insertToken = (token) => {
-  form.body = `${form.body}${form.body.endsWith(' ') || !form.body ? '' : ' '}${token} `;
-};
-
-const bodyRef = ref(null);
-
-const surround = (before, after) => {
-  const el = bodyRef.value;
-  if (!el) return;
-  const start = el.selectionStart;
-  const end = el.selectionEnd;
-  const selected = form.body.slice(start, end);
-  form.body = form.body.slice(0, start) + before + selected + after + form.body.slice(end);
-  nextTick(() => {
-    el.focus();
-    el.selectionStart = start + before.length;
-    el.selectionEnd = end + before.length;
-  });
-};
-
-const prefixLines = (prefix) => {
-  const el = bodyRef.value;
-  if (!el) return;
-  const lineStart = form.body.lastIndexOf('\n', el.selectionStart - 1) + 1;
-  const block = form.body.slice(lineStart, el.selectionEnd);
-  const replaced = block
-    .split('\n')
-    .map((line, i) => (prefix === '1. ' ? `${i + 1}. ${line}` : `${prefix}${line}`))
-    .join('\n');
-  form.body = form.body.slice(0, lineStart) + replaced + form.body.slice(el.selectionEnd);
-  nextTick(() => el.focus());
-};
-
-const formats = [
-  { key: 'bold', label: 'Bold', icon: BoldIcon, action: () => surround('**', '**') },
-  { key: 'italic', label: 'Italic', icon: ItalicIcon, action: () => surround('*', '*') },
-  { key: 'heading', label: 'Heading', icon: HeadingIcon, action: () => prefixLines('## ') },
-  { key: 'bulletList', label: 'Bullet list', icon: ListIcon, action: () => prefixLines('- ') },
-  { key: 'numberedList', label: 'Numbered list', icon: ListOrderedIcon, action: () => prefixLines('1. ') },
-  { key: 'link', label: 'Link', icon: LinkIcon, action: () => surround('[', '](https://)') }
-];
-
 const onSend = () => {
   if (form.audience === 'test') {
     send();
@@ -352,13 +231,9 @@ const send = () => {
 
 .composer {
   display: grid;
-  grid-template-columns: 1.4fr 1fr;
+  grid-template-columns: 1fr;
   gap: 1.5rem;
   align-items: start;
-
-  @media (max-width: $breakpoint-md) {
-    grid-template-columns: 1fr;
-  }
 }
 
 .composer__form {
@@ -380,8 +255,7 @@ const send = () => {
   color: $text-secondary;
 }
 
-.field__input,
-.field__textarea {
+.field__input {
   width: 100%;
   box-sizing: border-box;
   border: 1px solid $border-color;
@@ -394,72 +268,6 @@ const send = () => {
 
   &:focus {
     outline: none;
-    border-color: $primary;
-  }
-}
-
-.field__textarea {
-  resize: vertical;
-  border-top-left-radius: 0;
-  border-top-right-radius: 0;
-}
-
-.md-toolbar {
-  display: flex;
-  gap: 0.15rem;
-  padding: 0.3rem 0.4rem;
-  border: 1px solid $border-color;
-  border-bottom: none;
-  border-radius: $radius-lg $radius-lg 0 0;
-  background: $bg-light;
-}
-
-.md-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 28px;
-  height: 28px;
-  border: none;
-  border-radius: $radius-md;
-  background: transparent;
-  color: $text-secondary;
-  cursor: pointer;
-
-  &:hover {
-    background: $bg-white;
-    color: $primary;
-  }
-}
-
-.md-btn__icon {
-  width: 15px;
-  height: 15px;
-}
-
-.tokens {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 0.4rem;
-}
-
-.tokens__hint {
-  font-size: $font-size-xs;
-  color: $text-muted;
-}
-
-.token {
-  border: 1px solid $border-color;
-  background: $bg-light;
-  border-radius: $radius-md;
-  padding: 0.2rem 0.5rem;
-  font-size: $font-size-xs;
-  font-family: monospace;
-  color: $primary-dark;
-  cursor: pointer;
-
-  &:hover {
     border-color: $primary;
   }
 }
@@ -496,46 +304,6 @@ const send = () => {
 .confirm__actions {
   display: flex;
   gap: 0.5rem;
-}
-
-.preview {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-  position: sticky;
-  top: 1rem;
-}
-
-.preview__tag {
-  font-size: $font-size-xs;
-  font-weight: $font-semibold;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  color: $text-muted;
-}
-
-.preview__frame {
-  border: 1px solid $border-color;
-  border-radius: $radius-xl;
-  background: $bg-white;
-  overflow: hidden;
-  box-shadow: $elevation-1;
-  min-height: 320px;
-}
-
-.preview__iframe {
-  display: block;
-  width: 100%;
-  height: 520px;
-  border: none;
-}
-
-.preview__empty {
-  margin: 0;
-  padding: 2.5rem 1.5rem;
-  text-align: center;
-  color: $text-muted;
-  font-size: $font-size-sm;
 }
 
 .upload {
@@ -594,43 +362,6 @@ const send = () => {
   background: rgba(0, 0, 0, 0.55);
   color: #fff;
   cursor: pointer;
-}
-
-.recipients {
-  margin-top: 0.4rem;
-  max-height: 180px;
-  overflow-y: auto;
-  border: 1px solid $border-color;
-  border-radius: $radius-lg;
-  padding: 0.4rem;
-}
-
-.recipient {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.35rem 0.4rem;
-  font-size: $font-size-sm;
-  color: $text-primary;
-  cursor: pointer;
-  border-radius: $radius-md;
-
-  &:hover {
-    background: $bg-light;
-  }
-}
-
-.recipient__text {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.recipients__empty {
-  margin: 0;
-  padding: 0.6rem;
-  color: $text-muted;
-  font-size: $font-size-sm;
 }
 
 .attach-list {

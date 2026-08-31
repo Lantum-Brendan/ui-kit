@@ -8,8 +8,8 @@
     >
       <defs>
         <radialGradient id="upload-bloom" cx="100%" cy="30%" r="60%">
-          <stop offset="0%" stop-color="var(--surface-accent)" stop-opacity="0.4" />
-          <stop offset="100%" stop-color="var(--surface-accent)" stop-opacity="0" />
+          <stop offset="0%" stop-color="var(--surface-accent, var(--color-primary-lighter))" stop-opacity="0.4" />
+          <stop offset="100%" stop-color="var(--surface-accent, var(--color-primary-lighter))" stop-opacity="0" />
         </radialGradient>
       </defs>
       <circle cx="1100" cy="100" r="280" fill="url(#upload-bloom)" />
@@ -21,8 +21,8 @@
           <svg class="doc-orbit" viewBox="0 0 240 240" aria-hidden="true">
             <defs>
               <radialGradient id="doc-glow" cx="50%" cy="50%" r="55%">
-                <stop offset="0%" stop-color="var(--surface-accent)" stop-opacity="0.45" />
-                <stop offset="100%" stop-color="var(--surface-accent)" stop-opacity="0" />
+                <stop offset="0%" stop-color="var(--surface-accent, var(--color-primary-lighter))" stop-opacity="0.45" />
+                <stop offset="100%" stop-color="var(--surface-accent, var(--color-primary-lighter))" stop-opacity="0" />
               </radialGradient>
             </defs>
             <circle cx="120" cy="120" r="110" fill="url(#doc-glow)" />
@@ -31,7 +31,7 @@
               cy="120"
               r="92"
               fill="none"
-              stroke="var(--surface-accent)"
+              stroke="var(--surface-accent, var(--color-primary-lighter))"
               stroke-opacity="0.45"
               stroke-width="1"
               stroke-dasharray="3 4"
@@ -41,7 +41,7 @@
               cy="120"
               r="68"
               fill="none"
-              stroke="var(--surface-accent)"
+              stroke="var(--surface-accent, var(--color-primary-lighter))"
               stroke-opacity="0.6"
               stroke-width="1"
             />
@@ -85,20 +85,14 @@
         <h2 class="upload-title">{{ labels.title }}</h2>
         <p class="upload-subtitle">{{ labels.subtitle }}</p>
 
-        <div
-          class="drop-zone"
-          :class="{ 'drop-zone--active': isDragging }"
-          @dragover.prevent="isDragging = true"
-          @dragleave.prevent="isDragging = false"
-          @drop.prevent="handleDrop"
-          @click="fileInputRef?.click()"
-        >
-          <ArrowUpTrayIcon class="drop-zone__icon" />
-          <div class="drop-zone__text">
-            <p class="drop-zone__title">{{ labels.dropzone }}</p>
-            <p class="drop-zone__subtitle">{{ labels.supportedFormats }}</p>
-          </div>
-        </div>
+        <ImportUploadDropzone
+          :is-dragging="isDragging"
+          :labels="labels"
+          @files-dropped="handleFilesDropped"
+          @browse="fileInputRef?.click()"
+          @drag-over="isDragging = true"
+          @drag-leave="isDragging = false"
+        />
 
         <input
           ref="fileInputRef"
@@ -108,13 +102,7 @@
           @change="handleFileSelect"
         />
 
-        <div v-if="selectedFile" class="selected-file">
-          <DocumentIcon class="selected-file__icon" />
-          <span class="selected-file__name">{{ selectedFile.name }}</span>
-          <button class="selected-file__remove" :aria-label="labels.remove" @click="clearFile">
-            <XMarkIcon class="selected-file__remove-icon" />
-          </button>
-        </div>
+        <ImportUploadFileList :files="selectedFile ? [selectedFile] : []" :labels="labels" @remove="clearFile" />
 
         <div class="upload-row">
           <div class="upload-options">
@@ -143,11 +131,9 @@
 </template>
 
 <script setup lang="ts">
-import {
-  Upload as ArrowUpTrayIcon,
-  FileText as DocumentIcon,
-  X as XMarkIcon
-} from 'lucide-vue-next';
+import { ref, computed, onMounted, onBeforeUnmount } from 'vue';
+import ImportUploadDropzone from './ImportUploadDropzone.vue';
+import ImportUploadFileList from './ImportUploadFileList.vue';
 
 const props = withDefaults(
   defineProps<{
@@ -247,10 +233,8 @@ onBeforeUnmount(() => {
   if (rotateTimer) clearInterval(rotateTimer);
 });
 
-const handleDrop = (event: DragEvent) => {
-  isDragging.value = false;
-  const file = event.dataTransfer?.files[0];
-  if (file) selectedFile.value = file;
+const handleFilesDropped = (file: File) => {
+  selectedFile.value = file;
 };
 
 const handleFileSelect = (event: Event) => {
@@ -386,9 +370,9 @@ const handleUpload = () => {
   width: 44px;
   height: 44px;
   border-radius: 12px;
-  background: var(--surface-bg);
+  background: var(--surface-bg, var(--color-bg-white));
   border: 1px solid $border-light;
-  color: var(--surface-deep);
+  color: var(--surface-deep, var(--color-primary-dark));
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -440,7 +424,7 @@ const handleUpload = () => {
   letter-spacing: 0.08em;
   padding: 3px 7px;
   border-radius: 6px;
-  background: var(--surface-deep);
+  background: var(--surface-deep, var(--color-primary-dark));
   color: var(--color-text-inverse);
   font-variant-numeric: tabular-nums;
 }
@@ -460,7 +444,7 @@ const handleUpload = () => {
   height: 6px;
   border-radius: 50%;
   border: none;
-  background: var(--surface-accent);
+  background: var(--surface-accent, var(--color-primary-lighter));
   opacity: 0.35;
   cursor: pointer;
   padding: 0;
@@ -479,8 +463,6 @@ const handleUpload = () => {
   }
 }
 
-// Opacity-only crossfade so the transition doesn't clobber the card's
-// translate(-50%, -50%) centering transform.
 .doc-swap-enter-active,
 .doc-swap-leave-active {
   transition: opacity $duration-base $easing-standard;
@@ -501,7 +483,7 @@ const handleUpload = () => {
   font-weight: $font-bold;
   text-transform: uppercase;
   letter-spacing: 0.14em;
-  color: var(--surface-deep);
+  color: var(--surface-deep, var(--color-primary-dark));
   opacity: 0.85;
 }
 
@@ -509,7 +491,7 @@ const handleUpload = () => {
   font-size: 1.5rem;
   font-weight: $font-bold;
   letter-spacing: -0.025em;
-  color: var(--surface-ink);
+  color: var(--surface-ink, var(--color-text-primary));
   margin: 0 0 4px;
   line-height: 1.15;
 
@@ -520,7 +502,7 @@ const handleUpload = () => {
 
 .upload-subtitle {
   font-size: $font-size-base;
-  color: var(--surface-ink);
+  color: var(--surface-ink, var(--color-text-primary));
   opacity: 0.75;
   line-height: 1.5;
   margin: 0 0 12px;
@@ -530,103 +512,8 @@ const handleUpload = () => {
   }
 }
 
-.drop-zone {
-  display: flex;
-  align-items: center;
-  gap: $spacing-3;
-  padding: 16px 18px;
-  border: 1.5px dashed var(--surface-accent);
-  border-radius: 12px;
-  background: var(--glass-bg);
-  cursor: pointer;
-  transition:
-    background-color $duration-fast $easing-standard,
-    border-color $duration-fast $easing-standard;
-  backdrop-filter: blur(6px);
-
-  &:hover,
-  &--active {
-    border-color: var(--surface-deep);
-    background: var(--glass-bg-strong);
-  }
-
-  &__icon {
-    width: 24px;
-    height: 24px;
-    color: var(--surface-deep);
-    flex-shrink: 0;
-  }
-
-  &__text {
-    min-width: 0;
-  }
-
-  &__title {
-    font-size: $font-size-sm;
-    font-weight: $font-semibold;
-    color: var(--surface-ink);
-    margin: 0;
-  }
-
-  &__subtitle {
-    font-size: 11px;
-    color: var(--surface-ink);
-    opacity: 0.65;
-    margin: 0;
-  }
-}
-
 .hidden-input {
   display: none;
-}
-
-.selected-file {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-top: 10px;
-  padding: 8px 10px;
-  background: var(--glass-bg);
-  border: 1px solid $border-light;
-  border-radius: 999px;
-  backdrop-filter: blur(6px);
-
-  &__icon {
-    width: 16px;
-    height: 16px;
-    color: var(--surface-deep);
-    flex-shrink: 0;
-  }
-
-  &__name {
-    font-size: $font-size-sm;
-    font-weight: $font-medium;
-    color: var(--surface-ink);
-    flex: 1;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-
-  &__remove {
-    background: none;
-    border: none;
-    cursor: pointer;
-    padding: 4px;
-    border-radius: 6px;
-    display: inline-flex;
-    transition: background-color $duration-fast $easing-standard;
-
-    &:hover {
-      background-color: rgba(var(--color-expense-rgb), 0.12);
-    }
-  }
-
-  &__remove-icon {
-    width: 14px;
-    height: 14px;
-    color: var(--surface-deep);
-  }
 }
 
 .upload-row {
@@ -647,7 +534,7 @@ const handleUpload = () => {
     font-weight: $font-bold;
     text-transform: uppercase;
     letter-spacing: 0.06em;
-    color: var(--surface-deep);
+    color: var(--surface-deep, var(--color-primary-dark));
     opacity: 0.85;
     margin-bottom: 6px;
   }

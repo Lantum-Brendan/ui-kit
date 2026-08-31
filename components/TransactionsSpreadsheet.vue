@@ -1,37 +1,19 @@
 <template>
   <Teleport to="body">
     <div class="spreadsheet-overlay" role="dialog" aria-modal="true">
-      <header class="spreadsheet-header">
-        <div class="spreadsheet-title">
-          <TableCellsIcon class="icon" />
-          <h2>{{ labels.title }}</h2>
-          <span class="count">
-            {{ fill(labels.rowCount, { count: filteredRows.length }) }}
-            <span v-if="isStreaming" class="loading-more">· {{ labels.loadingMore }}</span>
-          </span>
-        </div>
-        <div class="spreadsheet-actions">
-          <input
-            v-model="searchInput"
-            type="search"
-            class="search"
-            :placeholder="labels.searchPlaceholder"
-          />
-          <button
-            type="button"
-            class="action-btn"
-            :disabled="!filteredRows.length"
-            :aria-label="labels.exportCsv"
-            :title="labels.exportCsv"
-            @click="exportCsv"
-          >
-            <ArrowDownTrayIcon class="icon" />
-          </button>
-          <button type="button" class="close-btn" :aria-label="labels.close" @click="$emit('close')">
-            <XMarkIcon class="icon" />
-          </button>
-        </div>
-      </header>
+      <TransactionsSpreadsheetToolbar
+        :labels="labels"
+        :row-count="filteredRows.length"
+        :is-streaming="isStreaming"
+        :search-value="searchInput"
+        :has-selection="hasSelection"
+        :export-disabled="!filteredRows.length"
+        @update:search-value="searchInput = $event"
+        @export="exportCsv"
+        @close="$emit('close')"
+        @add-row="handleAddRow"
+        @delete-selected="handleDeleteSelected"
+      />
 
       <div v-if="isLoading" class="state">
         <div class="spinner" />
@@ -71,7 +53,12 @@
             </tr>
           </thead>
           <tbody>
-            <tr v-for="(row, i) in sortedRows" :key="row.id" :class="`row--${row.type}`">
+            <tr
+              v-for="(row, i) in sortedRows"
+              :key="row.id"
+              :class="`row--${row.type}`"
+              @dblclick="editingRow = { ...row }"
+            >
               <td class="col-idx">{{ i + 1 }}</td>
               <td class="col-date">{{ formatDate(row.datetime) }}</td>
               <td class="col-type">
@@ -90,6 +77,14 @@
               <td class="col-wallet">{{ row.wallet?.name ?? '' }}</td>
               <td class="col-party">{{ row.party?.name ?? '' }}</td>
             </tr>
+            <TransactionsSpreadsheetEditor
+              v-if="editingRow"
+              :editing-row="editingRow"
+              :labels="labels"
+              :currencies="availableCurrencies"
+              @save="handleEditorSave"
+              @cancel="editingRow = null"
+            />
           </tbody>
           <tfoot>
             <tr class="totals">
@@ -115,13 +110,10 @@
 
 <script setup>
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
-import {
-  TableCellsIcon,
-  XMarkIcon,
-  ArrowDownTrayIcon,
-  ChevronUpIcon,
-  ChevronDownIcon
-} from '@heroicons/vue/24/outline';
+import { fill } from '../utils/fill';
+import { ChevronUpIcon, ChevronDownIcon } from '@heroicons/vue/24/outline';
+import TransactionsSpreadsheetToolbar from './TransactionsSpreadsheetToolbar.vue';
+import TransactionsSpreadsheetEditor from './TransactionsSpreadsheetEditor.vue';
 
 const props = defineProps({
   rows: { type: Array, default: () => [] },
@@ -151,15 +143,16 @@ const props = defineProps({
       totals: 'Totals',
       income: 'Income',
       expenses: 'Expenses',
-      net: 'Net'
+      net: 'Net',
+      addRow: 'Add row',
+      deleteSelected: 'Delete selected',
+      save: 'Save',
+      cancel: 'Cancel'
     })
   }
 });
 
 const emit = defineEmits(['close']);
-
-const fill = (template, params) =>
-  template.replace(/\{(\w+)\}/g, (_, key) => params[key] ?? '');
 
 const searchInput = ref('');
 const search = ref('');
@@ -322,8 +315,40 @@ const categoriesText = (row) => {
   return list.map((c) => c.name).join(', ');
 };
 
+// Toolbar / selection state
+const hasSelection = ref(false);
+const handleAddRow = () => {
+  editingRow.value = {
+    id: `new-${Date.now()}`,
+    datetime: new Date().toISOString(),
+    type: 'expense',
+    amount: '',
+    description: '',
+    categories: [],
+    wallet: { currency: availableCurrencies.value[0] ?? 'USD', name: '' },
+    party: null
+  };
+};
+const handleDeleteSelected = () => {
+  hasSelection.value = false;
+};
+
+// Editor state
+const editingRow = ref(null);
+const availableCurrencies = computed(() => {
+  const set = new Set(props.rows.map((r) => r.wallet?.currency).filter(Boolean));
+  return set.size ? [...set] : ['USD', 'EUR', 'GBP', 'JPY'];
+});
+const handleEditorSave = (updated) => {
+  // In real app this would emit to parent/store; here just close editor
+  editingRow.value = null;
+};
+
 const onKey = (e) => {
-  if (e.key === 'Escape') emit('close');
+  if (e.key === 'Escape') {
+    if (editingRow.value) editingRow.value = null;
+    else emit('close');
+  }
 };
 
 onMounted(() => {
@@ -348,113 +373,6 @@ onUnmounted(() => {
   z-index: $z-index-modal;
   display: flex;
   flex-direction: column;
-}
-
-.spreadsheet-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 1rem;
-  padding: 0.75rem 1rem;
-  border-bottom: 1px solid $border-color;
-  background: $bg-slate;
-  flex-shrink: 0;
-}
-
-.spreadsheet-title {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-
-  h2 {
-    margin: 0;
-    font-size: $font-size-base;
-    font-weight: $font-semibold;
-  }
-
-  .icon {
-    width: 20px;
-    height: 20px;
-    color: $primary;
-  }
-
-  .count {
-    font-size: $font-size-xs;
-    color: $text-muted;
-    margin-left: 6px;
-  }
-}
-
-.spreadsheet-actions {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.search {
-  width: 240px;
-  padding: 6px 10px;
-  border: 1px solid $border-color;
-  border-radius: $radius-md;
-  background: $input-bg;
-  color: $text-primary;
-  font-size: $font-size-sm;
-
-  &:focus {
-    outline: none;
-    border-color: $primary;
-    box-shadow: 0 0 0 2px rgba(var(--color-primary-rgb), 0.15);
-  }
-}
-
-.close-btn {
-  background: transparent;
-  border: 1px solid $border-color;
-  border-radius: $radius-md;
-  padding: 6px;
-  cursor: pointer;
-  color: $text-muted;
-  display: inline-flex;
-
-  .icon {
-    width: 16px;
-    height: 16px;
-  }
-
-  &:hover {
-    color: $primary;
-    border-color: $primary-muted;
-  }
-}
-
-.action-btn {
-  background: transparent;
-  border: 1px solid $border-color;
-  border-radius: $radius-md;
-  padding: 6px;
-  cursor: pointer;
-  color: $text-muted;
-  display: inline-flex;
-
-  .icon {
-    width: 16px;
-    height: 16px;
-  }
-
-  &:hover:not(:disabled) {
-    color: $primary;
-    border-color: $primary-muted;
-  }
-
-  &:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-  }
-}
-
-.loading-more {
-  color: $primary;
-  font-style: italic;
 }
 
 .state {
