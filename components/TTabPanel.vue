@@ -2,7 +2,11 @@
   <div
     v-if="shouldRender"
     v-show="active"
+    :id="panelId"
     role="tabpanel"
+    :aria-labelledby="tabId"
+    :hidden="!active ? true : undefined"
+    :tabindex="active ? 0 : undefined"
     class="t-tab-panel"
   >
     <slot />
@@ -18,12 +22,19 @@ const props = withDefaults(
     activeValue: string;
     lazy?: boolean;
     keepAlive?: boolean;
+    id?: string;
+    labelledBy?: string;
   }>(),
   {
     lazy: false,
-    keepAlive: true
+    keepAlive: true,
+    id: undefined,
+    labelledBy: undefined
   }
 );
+
+const panelId = computed(() => props.id ?? `t-tab-panel-${props.value}`);
+const tabId = computed(() => props.labelledBy ?? `t-tab-${props.value}`);
 
 const active = computed(() => props.value === props.activeValue);
 const hasBeenActive = ref(active.value);

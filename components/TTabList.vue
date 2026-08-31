@@ -21,6 +21,7 @@
 </template>
 
 <script setup lang="ts">
+import { nextTick } from 'vue';
 import type { Component } from 'vue';
 import TTab from './TTab.vue';
 
@@ -50,19 +51,70 @@ const emit = defineEmits<{
 }>();
 
 const handleKeydown = (event: KeyboardEvent) => {
-  if (!props.keyboard || !props.tabs.length) return;
-  const currentIndex = props.tabs.findIndex((t) => t.id === props.modelValue);
-  if (currentIndex === -1) return;
+  if (!props.keyboard) return;
+  const tablistEl = event.currentTarget as HTMLElement;
+  const tabEls = Array.from(tablistEl.querySelectorAll('[role="tab"]')) as HTMLElement[];
+  if (!tabEls.length) return;
 
-  if (event.key === 'ArrowRight') {
-    event.preventDefault();
-    const nextIndex = (currentIndex + 1) % props.tabs.length;
-    emit('update:modelValue', props.tabs[nextIndex].id);
-  } else if (event.key === 'ArrowLeft') {
-    event.preventDefault();
-    const prevIndex = (currentIndex - 1 + props.tabs.length) % props.tabs.length;
-    emit('update:modelValue', props.tabs[prevIndex].id);
+  // Determine current index from focused element or from modelValue
+  let currentIndex = tabEls.findIndex((el) => el === document.activeElement);
+  if (currentIndex === -1 && props.tabs.length) {
+    currentIndex = props.tabs.findIndex((t) => t.id === props.modelValue);
   }
+  if (currentIndex === -1) currentIndex = 0;
+
+  const getNextIndex = (dir: 1 | -1) => {
+    if (props.tabs.length) {
+      // skip disabled tabs when we have data
+      for (let i = 1; i <= props.tabs.length; i++) {
+        const idx = (currentIndex + dir * i + props.tabs.length) % props.tabs.length;
+        const el = tabEls[idx];
+        if (el && !(el as HTMLButtonElement).disabled && el.getAttribute('aria-disabled') !== 'true') {
+          return idx;
+        }
+      }
+      return (currentIndex + dir + props.tabs.length) % props.tabs.length;
+    }
+    // slot mode: skip disabled DOM nodes
+    for (let i = 1; i <= tabEls.length; i++) {
+      const idx = (currentIndex + dir * i + tabEls.length) % tabEls.length;
+      const el = tabEls[idx] as HTMLButtonElement;
+      if (!el.disabled) return idx;
+    }
+    return (currentIndex + dir + tabEls.length) % tabEls.length;
+  };
+
+  let nextIndex: number | null = null;
+  if (event.key === 'ArrowRight' || event.key === 'ArrowDown') {
+    event.preventDefault();
+    nextIndex = getNextIndex(1);
+  } else if (event.key === 'ArrowLeft' || event.key === 'ArrowUp') {
+    event.preventDefault();
+    nextIndex = getNextIndex(-1);
+  } else if (event.key === 'Home') {
+    event.preventDefault();
+    nextIndex = 0;
+  } else if (event.key === 'End') {
+    event.preventDefault();
+    nextIndex = tabEls.length - 1;
+  }
+
+  if (nextIndex === null) return;
+
+  const nextEl = tabEls[nextIndex];
+  if (!nextEl) return;
+
+  // Update model and move focus (roving tabindex will make new tab 0)
+  if (props.tabs.length) {
+    const nextId = props.tabs[nextIndex]?.id;
+    if (nextId) emit('update:modelValue', nextId);
+  } else {
+    // slot mode: the tab's value is in its id/value attr? try to dispatch click
+    nextEl.click();
+  }
+  nextTick(() => {
+    (nextEl as HTMLElement).focus();
+  });
 };
 </script>
 

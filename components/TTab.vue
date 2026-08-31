@@ -1,7 +1,10 @@
 <template>
   <button
+    :id="tabId"
     role="tab"
     :aria-selected="active"
+    :aria-controls="panelId"
+    :tabindex="disabled ? -1 : active ? 0 : -1"
     :disabled="disabled"
     :class="[
       't-tab tab tab-btn',
@@ -19,9 +22,10 @@
 </template>
 
 <script setup lang="ts">
+import { computed } from 'vue';
 import type { Component } from 'vue';
 
-withDefaults(
+const props = withDefaults(
   defineProps<{
     value: string;
     label?: string;
@@ -30,6 +34,8 @@ withDefaults(
     active?: boolean;
     disabled?: boolean;
     variant?: 'pill' | 'underline' | 'indicator';
+    id?: string;
+    controls?: string;
   }>(),
   {
     label: '',
@@ -37,13 +43,18 @@ withDefaults(
     count: undefined,
     active: false,
     disabled: false,
-    variant: 'pill'
+    variant: 'pill',
+    id: undefined,
+    controls: undefined
   }
 );
 
 defineEmits<{
   (e: 'click'): void;
 }>();
+
+const tabId = computed(() => props.id ?? `t-tab-${props.value}`);
+const panelId = computed(() => props.controls ?? `t-tab-panel-${props.value}`);
 </script>
 
 <style lang="scss" scoped>
