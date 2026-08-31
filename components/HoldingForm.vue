@@ -1,16 +1,19 @@
 <template>
   <Transition name="modal">
     <div v-if="open" class="modal-root" @click.self="$emit('close')">
-      <div class="modal-panel" role="dialog" aria-modal="true">
-        <header class="modal-head">
-          <h2 class="modal-title">{{ editing ? labels.editHolding : labels.addHolding }}</h2>
-          <button class="icon-btn" :aria-label="labels.close" @click="$emit('close')">
-            <X :size="18" />
-          </button>
-        </header>
-
-        <div class="field">
-          <label>{{ labels.priceSource }}</label>
+      <TForm
+        class="modal-panel"
+        :title="editing ? labels.editHolding : labels.addHolding"
+        :api-error="error"
+        :is-submitting="submitting"
+        :submit-label="editing ? labels.saveChanges : labels.addHolding"
+        :cancel-label="labels.cancel || 'Cancel'"
+        :show-close="true"
+        :show-cancel="true"
+        @submit="submit"
+        @close="$emit('close')"
+      >
+        <TFormField :label="labels.priceSource" field-id="holding-price-source" required>
           <div class="seg">
             <button
               type="button"
@@ -29,14 +32,20 @@
               <Pencil :size="14" /> {{ labels.manual }}
             </button>
           </div>
-        </div>
+        </TFormField>
 
-        <div v-if="form.price_source === 'auto'" class="field">
-          <label>{{ labels.coin }}</label>
-          <input
+        <TFormField
+          v-if="form.price_source === 'auto'"
+          :label="labels.coin"
+          field-id="holding-coin"
+          :error="form.price_source === 'auto' && !form.external_ref && error ? labels.coinRequired : ''"
+        >
+          <TFormInput
+            id="holding-coin"
             v-model="coinQuery"
             type="text"
             :placeholder="labels.searchCoin"
+            :error="!!(form.price_source === 'auto' && !form.external_ref && error)"
             @input="onSearch"
           />
           <ul v-if="searchResults.length" class="coin-results">
@@ -49,56 +58,65 @@
           <p v-if="form.external_ref" class="coin-picked">
             {{ labels.pricedAutomatically }} ({{ form.external_ref }})
           </p>
-        </div>
+        </TFormField>
 
-        <div class="field">
-          <label>{{ labels.name }}</label>
-          <input
+        <TFormField :label="labels.name" field-id="holding-name" required :error="error && !form.name.trim() ? labels.nameRequired : ''">
+          <TFormInput
+            id="holding-name"
             v-model="form.name"
             type="text"
             :placeholder="labels.namePlaceholder"
+            :error="!!(error && !form.name.trim())"
           />
-        </div>
+        </TFormField>
 
-        <div class="field-row">
-          <div class="field">
-            <label
-              >{{ labels.symbol }} <span class="opt">({{ labels.optional }})</span></label
-            >
-            <input v-model="form.symbol" type="text" placeholder="BTC" />
-          </div>
-          <div class="field">
-            <label>{{ labels.quantity }}</label>
-            <input v-model.number="form.quantity" type="number" step="any" min="0" />
-          </div>
-        </div>
+        <TFormRow :cols="2">
+          <TFormField :label="`${labels.symbol} (${labels.optional})`" field-id="holding-symbol">
+            <TFormInput id="holding-symbol" v-model="form.symbol" type="text" placeholder="BTC" />
+          </TFormField>
+          <TFormField :label="labels.quantity" field-id="holding-quantity" required :error="error && (!form.quantity || form.quantity <= 0) ? labels.quantityRequired : ''">
+            <TFormInput
+              id="holding-quantity"
+              v-model.number="form.quantity"
+              type="number"
+              step="any"
+              min="0"
+              :error="!!(error && (!form.quantity || form.quantity <= 0))"
+            />
+          </TFormField>
+        </TFormRow>
 
-        <div class="field-row">
-          <div class="field">
-            <label>{{ labels.currency }}</label>
-            <select v-model="form.currency">
-              <option v-for="c in currencies" :key="c.code || c" :value="c.code || c">{{ c.code || c }}</option>
-            </select>
-          </div>
-          <div v-if="form.price_source === 'manual'" class="field">
-            <label>{{ labels.pricePerUnit }}</label>
-            <input v-model.number="form.unit_price" type="number" step="any" min="0" />
-          </div>
-        </div>
-
-        <p v-if="error" class="form-error">{{ error }}</p>
-
-        <button type="button" class="submit" :disabled="submitting" @click="submit">
-          {{ editing ? labels.saveChanges : labels.addHolding }}
-        </button>
-      </div>
+        <TFormRow :cols="2">
+          <TFormField :label="labels.currency" field-id="holding-currency" required>
+            <TFormSelect
+              id="holding-currency"
+              v-model="form.currency"
+              :options="currencyOptions"
+            />
+          </TFormField>
+          <TFormField v-if="form.price_source === 'manual'" :label="labels.pricePerUnit" field-id="holding-price">
+            <TFormInput
+              id="holding-price"
+              v-model.number="form.unit_price"
+              type="number"
+              step="any"
+              min="0"
+            />
+          </TFormField>
+        </TFormRow>
+      </TForm>
     </div>
   </Transition>
 </template>
 
 <script setup>
-import { ref, reactive, watch } from 'vue';
-import { X, Pencil, Zap } from 'lucide-vue-next';
+import { ref, reactive, watch, computed } from 'vue';
+import { Pencil, Zap } from 'lucide-vue-next';
+import TForm from './TForm.vue';
+import TFormField from './TFormField.vue';
+import TFormInput from './TFormInput.vue';
+import TFormSelect from './TFormSelect.vue';
+import TFormRow from './TFormRow.vue';
 
 const props = defineProps({
   open: { type: Boolean, default: false },
@@ -118,6 +136,7 @@ const props = defineProps({
       editHolding: 'Edit holding',
       addHolding: 'Add holding',
       close: 'Close',
+      cancel: 'Cancel',
       priceSource: 'Price source',
       live: 'Live',
       manual: 'Manual',
@@ -155,6 +174,10 @@ const blank = () => ({
 const form = reactive(blank());
 const coinQuery = ref('');
 const error = ref('');
+
+const currencyOptions = computed(() =>
+  props.currencies.map((c) => ({ label: c.code || c, value: c.code || c }))
+);
 
 watch(
   () => props.open,
@@ -237,86 +260,15 @@ function submit() {
   max-width: 460px;
   max-height: 90vh;
   overflow-y: auto;
-  background: $bg-white;
-  border-radius: 20px 20px 0 0;
-  padding: $spacing-5;
-  display: flex;
-  flex-direction: column;
-  gap: $spacing-4;
-  box-shadow: $elevation-5;
+  // TForm provides its own background/border, override modal-panel defaults when using TForm
+  :deep(.t-form) {
+    margin: 0;
+    width: 100%;
+  }
 
   @media (min-width: $breakpoint-md) {
     border-radius: 20px;
   }
-}
-
-.modal-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.modal-title {
-  margin: 0;
-  font-size: $font-size-lg;
-  font-weight: $font-bold;
-  color: $text-primary;
-}
-
-.icon-btn {
-  width: 34px;
-  height: 34px;
-  border: none;
-  border-radius: 50%;
-  background: $bg-light;
-  color: $text-secondary;
-  cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.field {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  min-width: 0;
-
-  label {
-    font-size: $font-size-sm;
-    font-weight: $font-medium;
-    color: $text-primary;
-  }
-
-  .opt {
-    color: $text-muted;
-    font-weight: $font-normal;
-  }
-
-  input,
-  select {
-    width: 100%;
-    min-width: 0;
-    box-sizing: border-box;
-    height: 46px;
-    padding: 0 12px;
-    border: 1px solid $border-color;
-    border-radius: $radius-lg;
-    background: $bg-white;
-    color: $text-primary;
-    font-size: 15px;
-
-    &:focus {
-      outline: none;
-      border-color: $primary;
-    }
-  }
-}
-
-.field-row {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: $spacing-3;
 }
 
 .seg {
@@ -384,27 +336,5 @@ function submit() {
   margin: 0;
   font-size: 11px;
   color: $text-muted;
-}
-
-.form-error {
-  margin: 0;
-  color: var(--color-expense, #dc2626);
-  font-size: $font-size-sm;
-}
-
-.submit {
-  height: 48px;
-  border: none;
-  border-radius: $radius-lg;
-  background: $primary;
-  color: #fff;
-  font-weight: $font-semibold;
-  font-size: 15px;
-  cursor: pointer;
-
-  &:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
-  }
 }
 </style>

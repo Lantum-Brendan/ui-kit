@@ -1,9 +1,9 @@
 <template>
   <div class="table-container">
-    <TListHeader :title="labels.allTransactions">
+    <TListHeader :title="resolvedTitle">
       <SearchInput
         :model-value="searchQuery"
-        :placeholder="labels.search"
+        :placeholder="resolvedLabels.search"
         :debounce="0"
         @update:model-value="$emit('update:searchQuery', $event)"
       />
@@ -15,81 +15,26 @@
         <table class="custom-table" :class="{ 'expense-table': headerType === 'expense' }">
           <thead>
             <tr>
-              <th>{{ labels.dateTime }}</th>
-              <th>{{ labels.type }}</th>
-              <th>{{ labels.party }}</th>
-              <th>{{ labels.amount }}</th>
-              <th>{{ labels.category }}</th>
-              <th>{{ labels.action }}</th>
+              <th v-for="col in resolvedColumns" :key="col.key">{{ col.label }}</th>
             </tr>
           </thead>
           <tbody class="table-body">
-            <tr v-for="(txn, index) in displayedTransactions" :key="index">
-              <td>
-                <div class="date-main">{{ formatDate(txn) }}</div>
-                <div class="date-sub">{{ formatTimeAgo(txn) }}</div>
-              </td>
-              <td>
-                <span :class="['type-badge', txn.type === 'INCOME' ? 'income' : 'outcome']">
-                  {{ txn.type }}
-                </span>
-                <span v-if="txn.isTransfer" class="transfer-badge">
-                  {{ labels.transfer }}
-                </span>
-                <span v-if="txn.isRefund" class="refund-badge">
-                  {{ labels.refund }}
-                </span>
-                <span v-if="txn.isRecurring" class="recurring-badge">
-                  {{ labels.recurring }}
-                </span>
-              </td>
-              <td>
-                <span class="party">{{ txn.party || '—' }}</span>
-              </td>
-              <td>
-                <span :class="txn.type === 'INCOME' ? 'amount-income' : 'amount-outcome'">
-                  {{ txn.amount }}
-                </span>
-              </td>
-              <td>{{ txn.category }}</td>
-              <td>
-                <div class="actions">
-                  <button class="action-btn" @click="$emit('edit', txn)">
-                    <PencilSquareIcon class="action-icon" />
-                  </button>
-                  <button class="action-btn action-btn--recurring" @click="$emit('recurrent', txn)">
-                    <ArrowPathIcon class="action-icon" />
-                  </button>
-                  <button class="action-btn" @click="$emit('delete', txn)">
-                    <TrashIcon class="action-icon" />
-                  </button>
-                </div>
-              </td>
-            </tr>
+            <TTableRow
+              v-for="(txn, index) in displayedTransactions"
+              :key="index"
+              :txn="txn"
+              :labels="resolvedLabels"
+              :format-date="formatDate"
+              :format-time-ago="formatTimeAgo"
+              @edit="$emit('edit', $event)"
+              @delete="$emit('delete', $event)"
+              @recurrent="$emit('recurrent', $event)"
+            />
           </tbody>
           <tfoot>
             <tr class="totals-row">
               <td colspan="6" class="totals-cell">
-                <div class="totals-grid">
-                  <div class="total-section totals-label">
-                    <span class="total-label">{{ labels.totals }}</span>
-                  </div>
-                  <div class="total-section income">
-                    <span class="total-label">{{ labels.income }}</span>
-                    <span class="total-value">{{ formatDisplayCurrency(totals.income) }}</span>
-                  </div>
-                  <div class="total-section expense">
-                    <span class="total-label">{{ labels.expenses }}</span>
-                    <span class="total-value">{{ formatDisplayCurrency(totals.expenses) }}</span>
-                  </div>
-                  <div
-                    class="total-section net"
-                    :class="{ positive: totals.net >= 0, negative: totals.net < 0 }"
-                  >
-                    <span class="total-label">{{ labels.net }}</span>
-                    <span class="total-value">{{ formatDisplayCurrency(totals.net) }}</span>
-                  </div>
-                </div>
+                <TTableTotals :totals="totals" :labels="resolvedLabels" :format-currency="formatDisplayCurrency" />
               </td>
             </tr>
             <tr class="pagination-row">
@@ -99,7 +44,7 @@
                   :total-pages="pagesTotal"
                   :total-entries="computedTotalEntries"
                   :items-per-page="itemsPerPage"
-                  :entry-text="fill(labels.showingEntries, { start: startEntry, end: endEntry, total: computedTotalEntries })"
+                  :entry-text="fill(resolvedLabels.showingEntries, { start: startEntry, end: endEntry, total: computedTotalEntries })"
                   @page-change="$emit('page-change', $event)"
                 />
               </td>
@@ -113,11 +58,13 @@
 
 <script setup>
 import { computed } from 'vue';
-import { PencilSquareIcon, TrashIcon, ArrowPathIcon } from '@heroicons/vue/24/outline';
+// row icons moved to TTableRow.vue
 import SearchInput from './SearchInput.vue';
 import TListHeader from './TListHeader.vue';
 import TFilterToggle from './TFilterToggle.vue';
 import TPagination from './TPagination.vue';
+import TTableTotals from './TTableTotals.vue';
+import TTableRow from './TTableRow.vue';
 import { fill } from '../utils/fill';
 
 const props = defineProps({
@@ -136,38 +83,69 @@ const props = defineProps({
   getCurrencySymbol: { type: Function, required: true },
   convertCurrency: {
     type: Function,
-    default: (amount) => amount
+    default: undefined
+  },
+  locale: {
+    type: String,
+    default: undefined
+  },
+  // Preferred API: title + columns. `labels` is deprecated legacy (English defaults kept for compat).
+  title: {
+    type: String,
+    default: undefined
+  },
+  columns: {
+    type: Array,
+    default: undefined
   },
   labels: {
     type: Object,
-    default: () => ({
-      allTransactions: 'All Transactions',
-      search: 'Search...',
-      dateTime: 'Date Time',
-      type: 'Type',
-      party: 'Party',
-      amount: 'Amount',
-      category: 'Category',
-      action: 'Action',
-      transfer: 'Transfer',
-      refund: 'Refund',
-      recurring: 'Recurring',
-      totals: 'Totals',
-      income: 'Income',
-      expenses: 'Expenses',
-      net: 'Net',
-      previous: 'Previous',
-      next: 'Next',
-      showingEntries: 'Showing {start}-{end} of {total} entries',
-      justNow: 'just now',
-      minutesAgo: '{n} min ago',
-      hoursAgo: '{n} hr ago',
-      daysAgo: '{n} day ago'
-    })
+    default: undefined
   }
 });
 
 defineEmits(['edit', 'delete', 'recurrent', 'page-change', 'update:searchQuery', 'toggle-filters']);
+
+const defaultLabels = {
+  allTransactions: 'All Transactions',
+  search: 'Search...',
+  dateTime: 'Date Time',
+  type: 'Type',
+  party: 'Party',
+  amount: 'Amount',
+  category: 'Category',
+  action: 'Action',
+  transfer: 'Transfer',
+  refund: 'Refund',
+  recurring: 'Recurring',
+  totals: 'Totals',
+  income: 'Income',
+  expenses: 'Expenses',
+  net: 'Net',
+  previous: 'Previous',
+  next: 'Next',
+  showingEntries: 'Showing {start}-{end} of {total} entries',
+  justNow: 'just now',
+  minutesAgo: '{n} min ago',
+  hoursAgo: '{n} hr ago',
+  daysAgo: '{n} day ago'
+};
+
+const resolvedLabels = computed(() => ({ ...defaultLabels, ...(props.labels || {}) }));
+const resolvedTitle = computed(() => props.title ?? resolvedLabels.value.allTransactions);
+const resolvedColumns = computed(() => {
+  if (props.columns && props.columns.length) return props.columns;
+  // fallback to labels-derived columns (deprecated path)
+  const l = resolvedLabels.value;
+  return [
+    { key: 'dateTime', label: l.dateTime },
+    { key: 'type', label: l.type },
+    { key: 'party', label: l.party },
+    { key: 'amount', label: l.amount },
+    { key: 'category', label: l.category },
+    { key: 'action', label: l.action }
+  ];
+});
 
 const displayedTransactions = computed(() => props.transactions);
 
@@ -182,9 +160,26 @@ const totals = computed(() => {
   let income = 0;
   let expenses = 0;
 
+  const hasConverter = typeof props.convertCurrency === 'function';
+
   txns.forEach((txn) => {
     const { value, currency } = props.parseAmount(txn.amount);
-    const convertedAmount = props.convertCurrency(value, currency || targetCurrency, targetCurrency);
+    const fromCurrency = currency || targetCurrency;
+    let convertedAmount;
+    if (hasConverter) {
+      convertedAmount = props.convertCurrency(value, fromCurrency, targetCurrency);
+    } else {
+      if (fromCurrency !== targetCurrency) {
+        // No converter: do not silently treat EUR as USD. Skip and warn.
+        if (typeof console !== 'undefined' && console.warn) {
+          console.warn(
+            `[TTableComponent] Skipping ${value} ${fromCurrency} in totals: no convertCurrency provided to convert to ${targetCurrency}. Provide convertCurrency prop for mixed-currency totals.`
+          );
+        }
+        return;
+      }
+      convertedAmount = value;
+    }
     if (txn.type === 'INCOME') {
       income += convertedAmount;
     } else {
@@ -202,7 +197,8 @@ const totals = computed(() => {
 const formatDisplayCurrency = (value) => {
   const currency = props.defaultCurrency;
   const symbol = props.getCurrencySymbol(currency);
-  const formatted = new Intl.NumberFormat('en-US', {
+  const locale = props.locale ?? undefined;
+  const formatted = new Intl.NumberFormat(locale ?? 'en-US', {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2
   }).format(value);
@@ -244,12 +240,12 @@ const formatTimeAgo = (txn) => {
   if (isNaN(dateObj.getTime())) return '';
   const diffMs = Date.now() - dateObj.getTime();
   const minutes = Math.floor(diffMs / 60000);
-  if (minutes < 1) return props.labels.justNow;
-  if (minutes < 60) return fill(props.labels.minutesAgo, { n: minutes });
+  if (minutes < 1) return resolvedLabels.value.justNow;
+  if (minutes < 60) return fill(resolvedLabels.value.minutesAgo, { n: minutes });
   const hours = Math.floor(minutes / 60);
-  if (hours < 24) return fill(props.labels.hoursAgo, { n: hours });
+  if (hours < 24) return fill(resolvedLabels.value.hoursAgo, { n: hours });
   const days = Math.floor(hours / 24);
-  return fill(props.labels.daysAgo, { n: days });
+  return fill(resolvedLabels.value.daysAgo, { n: days });
 };
 </script>
 
@@ -437,146 +433,17 @@ const formatTimeAgo = (txn) => {
     border-bottom: none;
   }
 
-  .date {
-    &-main {
-      color: $text-primary;
-      font-weight: $font-medium;
-      font-size: $font-size-sm;
-    }
 
-    &-sub {
-      font-size: 9px;
-      font-weight: $font-normal;
-      color: $text-muted;
-    }
-  }
 
-  .type-badge {
-    padding: 4px 12px;
-    border-radius: $radius-md;
-    font-weight: bold;
-    font-size: 12px;
-    display: inline-block;
 
-    &.income {
-      background-color: rgba(var(--color-success-rgb), 0.15);
-      color: $success;
-    }
 
-    &.outcome {
-      background-color: rgba(var(--color-error-rgb), 0.15);
-      color: $error-color;
-    }
-  }
 
-  .transfer-badge {
-    display: inline-block;
-    margin-left: 6px;
-    padding: 2px 6px;
-    border-radius: $radius-sm;
-    font-size: 10px;
-    font-weight: bold;
-    background-color: rgba(var(--color-primary-rgb), 0.15);
-    color: $primary;
-    vertical-align: middle;
-  }
 
-  .recurring-badge {
-    display: inline-block;
-    margin-left: 6px;
-    padding: 2px 6px;
-    border-radius: $radius-sm;
-    font-size: 10px;
-    font-weight: bold;
-    background-color: rgba(var(--color-warning-rgb), 0.15);
-    color: $warning-text;
-    vertical-align: middle;
-  }
 
-  .refund-badge {
-    display: inline-block;
-    margin-left: 6px;
-    padding: 2px 6px;
-    border-radius: $radius-sm;
-    font-size: 10px;
-    font-weight: bold;
-    background-color: rgba(var(--color-accent-rgb), 0.18);
-    color: $accent-dark;
-    vertical-align: middle;
-  }
 
-  .party {
-    padding: 4px 8px;
-    border-radius: $radius-md;
-    display: inline-block;
-  }
 
-  .amount {
-    &-income {
-      color: $success;
-      font-weight: bold;
-    }
 
-    &-outcome {
-      color: $error-color;
-      font-weight: bold;
-    }
-  }
 
-  .actions {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-size: 16px;
-    color: $primary;
-    cursor: pointer;
-  }
-
-  .action-btn {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: transparent;
-    border: none;
-    padding: 6px;
-    border-radius: $radius-sm;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    width: 28px;
-    height: 28px;
-
-    &:hover {
-      background-color: rgba(var(--color-primary-rgb), 0.1);
-    }
-  }
-
-  .action-icon {
-    width: 16px;
-    height: 16px;
-    color: $primary;
-    transition: color 0.2s ease;
-
-    &:hover {
-      color: $primary-dark;
-    }
-  }
-
-  .action-btn--recurring .action-icon {
-    color: $warning-text;
-
-    &:hover {
-      color: $warning;
-    }
-  }
-
-  // Make delete icon red
-  .action-btn:last-child .action-icon {
-    color: $error-color;
-
-    &:hover {
-      color: $error-dark;
-    }
-  }
 }
 
 // Totals row styles
@@ -585,94 +452,6 @@ const formatTimeAgo = (txn) => {
     padding: 0 !important;
     background-color: $bg-white !important;
     border-top: 1px solid $border-light;
-  }
-
-  .totals-grid {
-    display: grid;
-    grid-template-columns: auto repeat(3, 1fr);
-    align-items: stretch;
-    width: 100%;
-  }
-
-  .total-section {
-    display: inline-flex;
-    align-items: center;
-    gap: 12px;
-    padding: 12px 18px;
-    line-height: 1.2;
-    border-right: 1px solid $border-light;
-
-    &:last-child {
-      border-right: none;
-    }
-
-    .total-label {
-      font-size: 11px;
-      font-weight: $font-bold;
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-      color: $text-secondary;
-      margin: 0;
-      white-space: nowrap;
-    }
-
-    .total-value {
-      font-size: $font-size-base;
-      font-weight: $font-bold;
-      font-variant-numeric: tabular-nums;
-      letter-spacing: -0.01em;
-      color: $text-primary;
-      white-space: nowrap;
-    }
-
-    &.totals-label {
-      background: $primary-light;
-      .total-label {
-        color: $primary-dark;
-        font-size: 12px;
-      }
-    }
-
-    &.income {
-      background: rgba(var(--color-income-rgb), 0.06);
-      .total-label {
-        color: var(--color-income);
-      }
-      .total-value {
-        color: var(--color-income);
-      }
-    }
-
-    &.expense {
-      background: rgba(var(--color-expense-rgb), 0.06);
-      .total-label {
-        color: var(--color-expense);
-      }
-      .total-value {
-        color: var(--color-expense);
-      }
-    }
-
-    &.net {
-      &.positive {
-        background: rgba(var(--color-income-rgb), 0.06);
-        .total-label {
-          color: var(--color-income);
-        }
-        .total-value {
-          color: var(--color-income);
-        }
-      }
-      &.negative {
-        background: rgba(var(--color-expense-rgb), 0.06);
-        .total-label {
-          color: var(--color-expense);
-        }
-        .total-value {
-          color: var(--color-expense);
-        }
-      }
-    }
   }
 }
 

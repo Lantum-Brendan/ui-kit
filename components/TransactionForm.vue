@@ -1,259 +1,143 @@
 <template>
-  <div class="transaction-form">
-    <div class="form">
-      <!-- Amount -->
-      <div class="transaction-date">
-        <span>{{ labels.amount }}</span>
-        <div class="transaction-amount">
-          <input
-            v-model="formAmount"
-            type="number"
-            :placeholder="labels.amountPlaceholder"
-            min="1"
-            step="any"
-            required
-          />
-          <select v-model="selectedCurrency" class="amount-currency-select" @change="onCurrencyChange">
-            <option v-for="currency in availableCurrencies" :key="currency" :value="currency">
-              {{ currency }}
-            </option>
-          </select>
-        </div>
-        <div v-if="amountError" class="error-text">{{ labels.amountError }}</div>
-      </div>
-
-      <!-- Description -->
-      <div class="transaction-description">
-        <span>{{ labels.description }} <span class="optional-label">({{ labels.optional }})</span></span>
-        <textarea v-model="formDescription" :placeholder="labels.typeHere" />
-      </div>
-
-      <!-- Intent -->
-      <div class="transaction-date">
-        <span>{{ labels.intent }} <span class="optional-label">({{ labels.optional }})</span></span>
-        <div class="intent-pills" role="radiogroup" :aria-label="labels.intent">
-          <button
-            v-for="opt in intentOptions"
-            :key="opt.value"
-            type="button"
-            class="intent-pill"
-            :class="{ 'intent-pill--active': formIntent === opt.value }"
-            role="radio"
-            :aria-checked="formIntent === opt.value"
-            @click="formIntent = opt.value"
-          >
-            <component :is="intentIcons[opt.value]" class="intent-pill-icon" />
-            <span>{{ labels.intentLabels?.[opt.value] || opt.label }}</span>
-          </button>
-        </div>
-      </div>
-
-      <!-- Date & Time -->
-      <div class="form-transaction">
-        <div class="transaction-date">
-          <span>{{ labels.transactionDate }}</span>
-          <input v-model="formDate" type="date" required />
-          <div v-if="dateError" class="error-text">{{ labels.dateError }}</div>
-        </div>
-        <div class="transaction-date">
-          <span>{{ labels.transactionTime }}</span>
-          <input v-model="formTime" type="time" required />
-          <div v-if="timeError" class="error-text">{{ labels.timeError }}</div>
-        </div>
-      </div>
-
-      <!-- Party & Wallet -->
-      <div class="form-transaction">
-        <SearchableDropdown
-          v-model="searchQuery"
-          :label="isOutcomeSelected ? labels.partySentTo : labels.partyReceivedFrom"
-          :placeholder="labels.searchParty"
-          :options="parties"
-          @select="handlePartySelect"
+  <TForm
+    :title="editingItem ? (isOutcomeSelected ? labels.updateExpense : labels.updateIncome) : (isOutcomeSelected ? labels.recordExpense : labels.recordIncome)"
+    :is-submitting="isSubmitting"
+    :submit-label="submitLabel"
+    :show-close="false"
+    :show-cancel="false"
+    @submit="onSubmit"
+  >
+    <TFormField :label="labels.amount" field-id="txn-amount" required :error="amountError ? labels.amountError : ''">
+      <div class="transaction-amount">
+        <TFormInput
+          v-model="formAmount"
+          type="number"
+          :placeholder="labels.amountPlaceholder"
+          :error="amountError"
         />
-
-        <div class="wallet-field-wrapper">
-          <SearchableDropdown
-            v-model="walletSearchQuery"
-            :label="isOutcomeSelected ? labels.walletSentFrom : labels.walletReceivedTo"
-            :placeholder="labels.searchWallet"
-            :options="filteredWallets"
-            :error="walletError ? labels.walletError : ''"
-            @select="handleWalletSelect"
-            @clear="selectedWalletId = null"
-          />
-          <span
-            v-if="isWalletDefault"
-            class="wallet-default-indicator"
-            :title="labels.defaultWallet"
-          >
-            {{ labels.default }}
-          </span>
-        </div>
-      </div>
-
-      <!-- Group & Categories -->
-      <div class="form-transaction">
-        <div class="group-field-wrapper">
-          <SearchableDropdown
-            v-model="groupSearchQuery"
-            :label="labels.group"
-            :placeholder="labels.searchGroup"
-            :options="groups"
-            :error="categoryError ? labels.groupError : ''"
-            @select="handleGroupSelect"
-            @clear="selectedGroupId = null"
-          />
-          <span
-            v-if="isGroupDefault"
-            class="group-default-indicator"
-            :title="labels.defaultGroup"
-          >
-            {{ labels.default }}
-          </span>
-        </div>
-
-        <SearchableDropdown
-          v-model="categorySearchQuery"
-          :label="labels.categories"
-          :placeholder="labels.searchCategories"
-          :options="categories"
-          :multiple="true"
-          :selected="selectedAdditionalCategoryIds"
-          @select="handleCategorySelect"
+        <TFormSelect
+          v-model="selectedCurrency"
+          :options="availableCurrencyOptions"
+          class="amount-currency-select"
         />
       </div>
+    </TFormField>
 
-      <!-- Attachments -->
-      <div class="transaction-files">
-        <span>{{ labels.attachments }}</span>
+    <TFormField :label="labels.description" field-id="txn-desc" :hint="labels.optional">
+      <TFormTextarea v-model="formDescription" :placeholder="labels.typeHere" :rows="3" />
+    </TFormField>
 
-        <div v-if="existingAttachments.length" class="attachment-grid">
-          <div
-            v-for="file in existingAttachments"
-            :key="`existing-${file.id}`"
-            class="attachment-card"
-            :class="{ removing: removingFileIds.has(file.id) }"
-          >
-            <div v-if="isImageAttachment(file)" class="thumb">
-              <img v-if="existingPreviews[file.id]" :src="existingPreviews[file.id]" :alt="labels.attachment" />
-              <div v-else class="thumb-placeholder">…</div>
-            </div>
-            <div v-else class="thumb thumb-doc">
-              <span>{{ extensionLabel(file.path) }}</span>
-            </div>
-            <button
-              type="button"
-              class="remove"
-              :disabled="removingFileIds.has(file.id)"
-              :title="labels.remove"
-              @click="$emit('remove-existing-attachment', file)"
-            >
-              ×
-            </button>
-          </div>
-        </div>
+    <TFormField :label="labels.intent" field-id="txn-intent" :hint="labels.optional">
+      <TransactionFormIntent v-model="formIntent" :options="intentOptions" :labels="labels" :label="labels.intent" />
+    </TFormField>
 
-        <div class="upload-box">
-          <input id="file-input" type="file" multiple @change="onFilesSelected" />
-          <label for="file-input" class="upload-button">{{ labels.browseFiles }}</label>
-          <span class="hint">{{ labels.fileHint }}</span>
-        </div>
+    <TFormRow :cols="2">
+      <TFormField :label="labels.transactionDate" field-id="txn-date" required :error="dateError ? labels.dateError : ''">
+        <TFormInput v-model="formDate" type="date" :error="dateError" />
+      </TFormField>
+      <TFormField :label="labels.transactionTime" field-id="txn-time" required :error="timeError ? labels.timeError : ''">
+        <TFormInput v-model="formTime" type="time" :error="timeError" />
+      </TFormField>
+    </TFormRow>
 
-        <div v-if="newAttachments.length" class="attachment-grid">
-          <div
-            v-for="(att, i) in newAttachments"
-            :key="`new-${att.name}-${i}`"
-            class="attachment-card"
-          >
-            <div v-if="att.isImage && att.previewUrl" class="thumb">
-              <img :src="att.previewUrl" :alt="att.name" />
-            </div>
-            <div v-else class="thumb thumb-doc">
-              <span>{{ extensionLabel(att.name) }}</span>
-            </div>
-            <span class="filename">{{ att.name }}</span>
-            <button type="button" class="remove" :title="labels.remove" @click="removeNewAttachment(i)">
-              ×
-            </button>
-          </div>
-        </div>
+    <TransactionFormParties
+      :parties="parties"
+      :wallets="wallets"
+      :filtered-wallets="filteredWallets"
+      :search-query="searchQuery"
+      :wallet-search-query="walletSearchQuery"
+      :selected-party-id="selectedPartyId"
+      :selected-wallet-id="selectedWalletId"
+      :labels="labels"
+      :is-outcome-selected="isOutcomeSelected"
+      :wallet-error="walletError"
+      :is-wallet-default="isWalletDefault"
+      @update:search-query="searchQuery = $event"
+      @update:wallet-search-query="walletSearchQuery = $event"
+      @update:selected-party-id="selectedPartyId = $event"
+      @update:selected-wallet-id="selectedWalletId = $event"
+      @select:party="searchQuery = $event.name"
+      @select:wallet="handleWalletSelect"
+      @clear:wallet="selectedWalletId = null"
+    />
+
+    <TransactionFormGroups
+      :groups="groups"
+      :categories="categories"
+      :group-search-query="groupSearchQuery"
+      :category-search-query="categorySearchQuery"
+      :selected-group-id="selectedGroupId"
+      :selected-additional-category-ids="selectedAdditionalCategoryIds"
+      :labels="labels"
+      :category-error="categoryError"
+      :is-group-default="isGroupDefault"
+      @update:group-search-query="groupSearchQuery = $event"
+      @update:category-search-query="categorySearchQuery = $event"
+      @update:selected-group-id="selectedGroupId = $event"
+      @update:selected-additional-category-ids="selectedAdditionalCategoryIds = $event"
+      @select:group="categoryError = false"
+      @select:category="selectedAdditionalCategoryIds = $event"
+      @clear:group="selectedGroupId = null"
+    />
+
+    <TFormField :label="labels.attachments" field-id="txn-attachments">
+      <TransactionFormAttachments
+        :existing-attachments="existingAttachments"
+        :existing-previews="existingPreviews"
+        :removing-file-ids="removingFileIds"
+        :new-attachments="newAttachments"
+        :labels="labels"
+        @remove-existing-attachment="$emit('remove-existing-attachment', $event)"
+        @remove-new-attachment="removeNewAttachment($event)"
+        @files-selected="onFilesSelected"
+      />
+    </TFormField>
+
+    <TFormField v-if="!isOutcomeSelected" :label="labels.thisIsRefund" field-id="txn-refund">
+      <label class="refund-toggle"><input v-model="formIsRefund" type="checkbox" /> <span>{{ labels.thisIsRefund }}</span></label>
+      <p class="refund-hint">{{ labels.refundHint }}</p>
+      <div v-if="formIsRefund" class="refund-link">
+        <SearchableDropdown
+          v-model="refundPickerQuery"
+          :label="labels.refundOf"
+          :placeholder="recentExpenses.length ? labels.searchExpenses : labels.loadingExpenses"
+          :options="refundOptions"
+          @select="handleRefundSelect"
+          @clear="formRefundOfTransactionId = null"
+        />
+        <p class="refund-link-hint">{{ labels.refundLinkHint }}</p>
       </div>
+    </TFormField>
 
-      <!-- Refund -->
-      <div v-if="!isOutcomeSelected" class="refund-section">
-        <label class="refund-toggle">
-          <input v-model="formIsRefund" type="checkbox" />
-          <span>{{ labels.thisIsRefund }}</span>
-        </label>
-        <p class="refund-hint">{{ labels.refundHint }}</p>
-        <div v-if="formIsRefund" class="refund-link">
-          <SearchableDropdown
-            v-model="refundPickerQuery"
-            :label="labels.refundOf"
-            :placeholder="recentExpenses.length ? labels.searchExpenses : labels.loadingExpenses"
-            :options="refundOptions"
-            @select="handleRefundSelect"
-            @clear="formRefundOfTransactionId = null"
-          />
-          <p class="refund-link-hint">{{ labels.refundLinkHint }}</p>
-        </div>
-      </div>
-
-      <!-- Recurring -->
-      <div class="recurring-section">
-        <label class="recurring-toggle">
-          <input v-model="formIsRecurring" type="checkbox" />
-          <span>{{ labels.makeRecurring }}</span>
-        </label>
-        <div v-if="formIsRecurring" class="recurring-fields">
-          <div class="form-transaction">
-            <div class="transaction-date">
-              <span>{{ labels.recurrencePeriod }}</span>
-              <select v-model="formRecurrencePeriod" class="recurring-select">
-                <option value="daily">{{ labels.daily }}</option>
-                <option value="weekly">{{ labels.weekly }}</option>
-                <option value="monthly">{{ labels.monthly }}</option>
-                <option value="yearly">{{ labels.yearly }}</option>
-              </select>
-            </div>
-            <div class="transaction-date">
-              <span>{{ labels.repeatEvery }}</span>
-              <input v-model.number="formRecurrenceInterval" type="number" min="1" />
-            </div>
-          </div>
-          <div class="transaction-date">
-            <span>{{ labels.endDate }} <span class="optional-label">({{ labels.optional }})</span></span>
-            <input v-model="formRecurrenceEndsAt" type="date" />
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <TButton
-      :text="submitLabel"
-      class="submit-button"
-      :class="{ 'submit-button--expense': isOutcomeSelected }"
-      :disabled="isSubmitting"
-      :loading="isSubmitting"
-      @click="onSubmit"
-    >
-      <template #left-icon>
-        <CheckIcon v-if="!editingItem" />
-        <PencilIcon v-else />
-      </template>
-    </TButton>
-  </div>
+    <TFormField :label="labels.makeRecurring" field-id="txn-recurring">
+      <TransactionFormRecurring
+        v-model="formIsRecurring"
+        :period="formRecurrencePeriod"
+        :interval="formRecurrenceInterval"
+        :ends-at="formRecurrenceEndsAt"
+        :labels="labels"
+        @update:period="formRecurrencePeriod = $event"
+        @update:interval="formRecurrenceInterval = $event"
+        @update:endsAt="formRecurrenceEndsAt = $event"
+      />
+    </TFormField>
+  </TForm>
 </template>
 
 <script setup>
 import { ref, computed, watch } from 'vue';
-import TButton from './TButton.vue';
+import TForm from './TForm.vue';
+import TFormField from './TFormField.vue';
+import TFormInput from './TFormInput.vue';
+import TFormSelect from './TFormSelect.vue';
+import TFormTextarea from './TFormTextarea.vue';
+import TFormRow from './TFormRow.vue';
 import SearchableDropdown from './SearchableDropdown.vue';
-import { CheckIcon, PencilIcon } from '@heroicons/vue/24/outline';
-import {
-  Circle, HandCoins, Banknote, Scale, Handshake, TrendingUp, PiggyBank, Gift
-} from 'lucide-vue-next';
+import TransactionFormIntent from './TransactionFormIntent.vue';
+import TransactionFormRecurring from './TransactionFormRecurring.vue';
+import TransactionFormAttachments from './TransactionFormAttachments.vue';
+import TransactionFormParties from './TransactionFormParties.vue';
+import TransactionFormGroups from './TransactionFormGroups.vue';
 
 const INTENT_OPTIONS = [
   { value: 'regular',           label: 'Regular',              side: 'both' },
@@ -266,11 +150,7 @@ const INTENT_OPTIONS = [
   { value: 'gift',              label: 'Gift',                 side: 'both' }
 ];
 
-const intentIcons = {
-  regular: Circle, loan_received: HandCoins, loan_repayment: Banknote,
-  debt_owed: Scale, debt_settled: Handshake, investment_buy: TrendingUp,
-  investment_return: PiggyBank, gift: Gift
-};
+
 
 const props = defineProps({
   isOutcomeSelected: { type: Boolean, default: false },
@@ -320,9 +200,20 @@ const props = defineProps({
 const emit = defineEmits(['submit', 'remove-existing-attachment', 'load-expenses']);
 
 // ── form state ──────────────────────────────────────────────────────────────
+function toLocalDateString(d) {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+}
+function toLocalTimeString(d) {
+  const h = String(d.getHours()).padStart(2, '0');
+  const mi = String(d.getMinutes()).padStart(2, '0');
+  return `${h}:${mi}`;
+}
 const now = new Date();
-const formDate = ref(now.toISOString().slice(0, 10));
-const formTime = ref(now.toTimeString().slice(0, 5));
+const formDate = ref(toLocalDateString(now));
+const formTime = ref(toLocalTimeString(now));
 const formAmount = ref('');
 const formDescription = ref('');
 const formIntent = ref('regular');
@@ -365,6 +256,10 @@ const availableCurrencies = computed(() => {
   return Array.from(set).sort();
 });
 
+const availableCurrencyOptions = computed(() =>
+  availableCurrencies.value.map((c) => ({ label: c, value: c }))
+);
+
 const filteredWallets = computed(() =>
   props.wallets.filter((w) => !w.currency || w.currency === selectedCurrency.value)
 );
@@ -395,29 +290,10 @@ const submitLabel = computed(() => {
 });
 
 // ── handlers ──────────────────────────────────────────────────────────────────
-function handlePartySelect(party) {
-  selectedPartyId.value = party.id;
-  searchQuery.value = party.name;
-}
 function handleWalletSelect(wallet) {
-  selectedWalletId.value = wallet.id;
   walletError.value = false;
   if (wallet.currency && wallet.currency !== selectedCurrency.value)
     selectedCurrency.value = wallet.currency;
-}
-function onCurrencyChange() {
-  const current = props.wallets.find((w) => w.id === selectedWalletId.value);
-  if (current?.currency && current.currency !== selectedCurrency.value) {
-    selectedWalletId.value = null;
-    walletSearchQuery.value = '';
-  }
-}
-function handleGroupSelect(group) {
-  selectedGroupId.value = group.id;
-  categoryError.value = false;
-}
-function handleCategorySelect(ids) {
-  selectedAdditionalCategoryIds.value = ids;
 }
 function handleRefundSelect(option) {
   formRefundOfTransactionId.value = option?.id ?? null;
@@ -434,17 +310,6 @@ watch(() => props.isOutcomeSelected, (isExpense) => {
 
 // ── attachments ───────────────────────────────────────────────────────────────
 const MAX_ATTACHMENTS = 5;
-
-function isImageAttachment(file) {
-  if (!file.path && !file.name) return false;
-  return /\.(jpg|jpeg|png|gif|webp|svg)$/i.test(file.path || file.name || '');
-}
-
-function extensionLabel(path) {
-  if (!path) return '?';
-  const parts = String(path).split('.');
-  return parts.length > 1 ? parts.pop().toUpperCase() : 'FILE';
-}
 
 function onFilesSelected(e) {
   const files = Array.from(e.target.files || []);
@@ -578,180 +443,6 @@ function onSubmit() {
   color: $error-color;
 }
 
-.intent-pills {
-  display: flex;
-  flex-wrap: wrap;
-  gap: $spacing-2;
-}
-
-.intent-pill {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  padding: 5px 10px;
-  border: 1px solid $border-color;
-  border-radius: 999px;
-  background: transparent;
-  color: $text-secondary;
-  font-size: $font-size-xs;
-  cursor: pointer;
-  transition: all 0.15s;
-
-  .intent-pill-icon {
-    width: 12px;
-    height: 12px;
-  }
-
-  &--active {
-    border-color: $primary;
-    background: $primary-light;
-    color: $primary;
-  }
-}
-
-.wallet-field-wrapper,
-.group-field-wrapper {
-  position: relative;
-}
-
-.wallet-default-indicator,
-.group-default-indicator {
-  position: absolute;
-  top: 0;
-  right: 0;
-  font-size: $font-size-xs;
-  color: $primary;
-  font-weight: $font-medium;
-  background: $primary-light;
-  padding: 2px 6px;
-  border-radius: $radius-sm;
-}
-
-.transaction-files {
-  display: flex;
-  flex-direction: column;
-  gap: $spacing-2;
-
-  > span:first-child {
-    font-size: $font-size-sm;
-    font-weight: $font-medium;
-    color: $text-secondary;
-  }
-}
-
-.attachment-grid {
-  display: flex;
-  flex-wrap: wrap;
-  gap: $spacing-2;
-}
-
-.attachment-card {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 4px;
-  width: 80px;
-
-  &.removing {
-    opacity: 0.5;
-  }
-}
-
-.thumb {
-  width: 64px;
-  height: 64px;
-  border-radius: $radius-md;
-  overflow: hidden;
-  border: 1px solid $border-color;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: $bg-light;
-
-  img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-  }
-
-  &-doc {
-    span {
-      font-size: $font-size-xs;
-      font-weight: $font-bold;
-      color: $text-muted;
-    }
-  }
-}
-
-.thumb-placeholder {
-  color: $text-muted;
-  font-size: $font-size-lg;
-}
-
-.filename {
-  font-size: 10px;
-  color: $text-muted;
-  max-width: 80px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.remove {
-  position: absolute;
-  top: -6px;
-  right: -6px;
-  width: 20px;
-  height: 20px;
-  border-radius: 50%;
-  border: 1px solid $border-color;
-  background: $bg-white;
-  color: $text-secondary;
-  font-size: 14px;
-  line-height: 1;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  &:hover {
-    background: rgba(var(--color-error-rgb), 0.1);
-    color: $error-color;
-    border-color: $error-color;
-  }
-}
-
-.upload-box {
-  display: flex;
-  align-items: center;
-  gap: $spacing-3;
-
-  #file-input {
-    display: none;
-  }
-}
-
-.upload-button {
-  padding: 6px 12px;
-  border: 1px solid $border-color;
-  border-radius: $radius-md;
-  cursor: pointer;
-  font-size: $font-size-sm;
-  color: $text-secondary;
-  background: $bg-white;
-
-  &:hover {
-    border-color: $primary;
-    color: $primary;
-  }
-}
-
-.hint {
-  font-size: $font-size-xs;
-  color: $text-muted;
-}
-
 .refund-section,
 .recurring-section {
   display: flex;
@@ -783,21 +474,7 @@ function onSubmit() {
   gap: $spacing-1;
 }
 
-.recurring-fields {
-  display: flex;
-  flex-direction: column;
-  gap: $spacing-3;
-  padding-left: $spacing-5;
-}
 
-.recurring-select {
-  padding: $spacing-2 $spacing-3;
-  border: 1px solid $border-color;
-  border-radius: $radius-md;
-  background: $input-bg;
-  color: $text-primary;
-  font-size: $font-size-sm;
-}
 
 .submit-button {
   margin-top: $spacing-2;
