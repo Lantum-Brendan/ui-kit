@@ -18,30 +18,30 @@
       </template>
     </TSectionHeader>
 
-    <div class="grid">
-      <div class="col col--income">
-        <CategoryRanking
-          :title="labels.incomeCategories"
-          :subtitle="fill(labels.nIncome, { n: filteredIncome.length })"
-          :buckets="filteredIncome"
-          :show-delta="compareEnabled"
-          :currency="currency"
-          :formatter="formatter"
-          @drill="(b) => $emit('drill', { ...b, kind: 'income' })"
-        />
-      </div>
-      <div class="col col--expense">
-        <CategoryRanking
-          :title="labels.expenseCategories"
-          :subtitle="fill(labels.nExpense, { n: filteredExpense.length })"
-          :buckets="filteredExpense"
-          :show-delta="compareEnabled"
-          :currency="currency"
-          :formatter="formatter"
-          @drill="(b) => $emit('drill', { ...b, kind: 'expense' })"
-        />
-      </div>
-    </div>
+    <TTabList v-model="activeTab" :tabs="tabs" variant="pill" />
+
+    <TTabPanel value="income" :active-value="activeTab">
+      <CategoryRanking
+        :title="labels.incomeCategories"
+        :subtitle="fill(labels.nIncome, { n: filteredIncome.length })"
+        :buckets="filteredIncome"
+        :show-delta="compareEnabled"
+        :currency="currency"
+        :formatter="formatter"
+        @drill="(b) => $emit('drill', { ...b, kind: 'income' })"
+      />
+    </TTabPanel>
+    <TTabPanel value="expense" :active-value="activeTab">
+      <CategoryRanking
+        :title="labels.expenseCategories"
+        :subtitle="fill(labels.nExpense, { n: filteredExpense.length })"
+        :buckets="filteredExpense"
+        :show-delta="compareEnabled"
+        :currency="currency"
+        :formatter="formatter"
+        @drill="(b) => $emit('drill', { ...b, kind: 'expense' })"
+      />
+    </TTabPanel>
   </section>
 </template>
 
@@ -50,6 +50,8 @@ import { ref, computed } from 'vue';
 import { Search } from 'lucide-vue-next';
 import CategoryRanking from './CategoryRanking.vue';
 import TSectionHeader from './TSectionHeader.vue';
+import TTabList from './TTabList.vue';
+import TTabPanel from './TTabPanel.vue';
 import { fill } from '../utils/fill';
 
 const props = defineProps({
@@ -76,6 +78,12 @@ const props = defineProps({
 defineEmits(['drill']);
 
 const query = ref('');
+const activeTab = ref('income');
+
+const tabs = computed(() => [
+  { id: 'income', label: props.labels.incomeCategories },
+  { id: 'expense', label: props.labels.expenseCategories }
+]);
 
 const matches = (name) =>
   !query.value.trim() || name.toLowerCase().includes(query.value.trim().toLowerCase());

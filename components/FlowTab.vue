@@ -35,42 +35,50 @@
     </div>
 
     <div class="legend">
-      <div class="legend-col">
-        <h4 class="legend-title">
-          <ArrowDownLeft :size="12" />
-          {{ labels.sources }}
-        </h4>
-        <ul>
-          <li v-for="s in flow.sources" :key="s.name">
-            <span class="dot" :style="{ background: 'var(--color-income)' }" />
-            <span class="ll-name">{{ s.name }}</span>
-            <span class="ll-amt">{{ formatter(s.amount, currency) }}</span>
-          </li>
-          <li v-if="!flow.sources.length" class="empty">{{ labels.noIncome }}</li>
-        </ul>
-      </div>
-      <div class="legend-col">
-        <h4 class="legend-title">
-          <ArrowUpRight :size="12" />
-          {{ labels.destinations }}
-        </h4>
-        <ul>
-          <li v-for="s in flow.sinks" :key="s.name">
-            <span class="dot" :style="{ background: s.color || 'var(--color-expense)' }" />
-            <span class="ll-name">{{ s.name }}</span>
-            <span class="ll-amt">{{ formatter(s.amount, currency) }}</span>
-          </li>
-          <li v-if="!flow.sinks.length" class="empty">{{ labels.noExpenses }}</li>
-        </ul>
-      </div>
+      <TTabList v-model="activeLegendTab" :tabs="legendTabs" variant="pill" />
+      <TTabPanel value="sources" :active-value="activeLegendTab">
+        <div class="legend-col">
+          <h4 class="legend-title">
+            <ArrowDownLeft :size="12" />
+            {{ labels.sources }}
+          </h4>
+          <ul>
+            <li v-for="s in flow.sources" :key="s.name">
+              <span class="dot" :style="{ background: 'var(--color-income)' }" />
+              <span class="ll-name">{{ s.name }}</span>
+              <span class="ll-amt">{{ formatter(s.amount, currency) }}</span>
+            </li>
+            <li v-if="!flow.sources.length" class="empty">{{ labels.noIncome }}</li>
+          </ul>
+        </div>
+      </TTabPanel>
+      <TTabPanel value="destinations" :active-value="activeLegendTab">
+        <div class="legend-col">
+          <h4 class="legend-title">
+            <ArrowUpRight :size="12" />
+            {{ labels.destinations }}
+          </h4>
+          <ul>
+            <li v-for="s in flow.sinks" :key="s.name">
+              <span class="dot" :style="{ background: s.color || 'var(--color-expense)' }" />
+              <span class="ll-name">{{ s.name }}</span>
+              <span class="ll-amt">{{ formatter(s.amount, currency) }}</span>
+            </li>
+            <li v-if="!flow.sinks.length" class="empty">{{ labels.noExpenses }}</li>
+          </ul>
+        </div>
+      </TTabPanel>
     </div>
   </section>
 </template>
 
 <script setup>
+import { ref } from 'vue';
 import { ArrowDownLeft, ArrowUpRight, PiggyBank } from 'lucide-vue-next';
 import SankeyFlow from './SankeyFlow.vue';
 import TSectionHeader from './TSectionHeader.vue';
+import TTabList from './TTabList.vue';
+import TTabPanel from './TTabPanel.vue';
 
 const props = defineProps({
   flow: { type: Object, required: true },
@@ -100,6 +108,12 @@ const props = defineProps({
     })
   }
 });
+
+const activeLegendTab = ref('sources');
+const legendTabs = [
+  { id: 'sources', label: props.labels.sources },
+  { id: 'destinations', label: props.labels.destinations }
+];
 </script>
 
 <style lang="scss" scoped>

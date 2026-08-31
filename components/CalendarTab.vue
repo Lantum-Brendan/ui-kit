@@ -19,69 +19,76 @@
       </div>
 
       <aside class="cal-side">
-        <article class="stat-card">
-          <header>
-            <Flame :size="12" />
-            <h3>{{ labels.topSpendDays }}</h3>
-          </header>
-          <ol v-if="topDays.length" class="rank">
-            <li v-for="d in topDays" :key="d.date" class="rank-item">
-              <span class="rank-date">{{ formatLong(d.date) }}</span>
-              <span class="rank-amt">{{ formatter(d.expense, currency) }}</span>
-            </li>
-          </ol>
-          <p v-else class="empty">{{ labels.noSpendingRecorded }}</p>
-        </article>
-
-        <article class="stat-card">
-          <header>
-            <BarChart3 :size="12" />
-            <h3>{{ labels.atAGlance }}</h3>
-          </header>
-          <dl class="stat-list">
-            <div class="stat-row">
-              <dt>{{ labels.daysWithSpend }}</dt>
-              <dd>{{ daysWithSpend }} / {{ buckets.length }}</dd>
-            </div>
-            <div class="stat-row">
-              <dt>{{ labels.noSpendDays }}</dt>
-              <dd>{{ noSpendDays }}</dd>
-            </div>
-            <div class="stat-row">
-              <dt>{{ labels.avgDailySpend }}</dt>
-              <dd>{{ formatter(avgDaily, currency) }}</dd>
-            </div>
-            <div class="stat-row">
-              <dt>{{ labels.busiestWeekday }}</dt>
-              <dd>{{ busiestWeekday }}</dd>
-            </div>
-          </dl>
-        </article>
-
-        <article class="stat-card">
-          <header>
-            <Calendar :size="12" />
-            <h3>{{ labels.byWeekday }}</h3>
-          </header>
-          <div class="weekday-grid">
-            <div v-for="(d, i) in weekBuckets" :key="i" class="weekday-cell">
-              <div class="weekday-bar-vert">
-                <span class="weekday-bar-fill" :style="{ height: `${(d / weekMax) * 100}%` }" />
+        <TTabList v-model="activeTab" :tabs="calTabs" variant="pill" />
+        <TTabPanel value="top" :active-value="activeTab">
+          <article class="stat-card">
+            <header>
+              <Flame :size="12" />
+              <h3>{{ labels.topSpendDays }}</h3>
+            </header>
+            <ol v-if="topDays.length" class="rank">
+              <li v-for="d in topDays" :key="d.date" class="rank-item">
+                <span class="rank-date">{{ formatLong(d.date) }}</span>
+                <span class="rank-amt">{{ formatter(d.expense, currency) }}</span>
+              </li>
+            </ol>
+            <p v-else class="empty">{{ labels.noSpendingRecorded }}</p>
+          </article>
+        </TTabPanel>
+        <TTabPanel value="glance" :active-value="activeTab">
+          <article class="stat-card">
+            <header>
+              <BarChart3 :size="12" />
+              <h3>{{ labels.atAGlance }}</h3>
+            </header>
+            <dl class="stat-list">
+              <div class="stat-row">
+                <dt>{{ labels.daysWithSpend }}</dt>
+                <dd>{{ daysWithSpend }} / {{ buckets.length }}</dd>
               </div>
-              <span class="weekday-name">{{ dayShortNames[i] }}</span>
+              <div class="stat-row">
+                <dt>{{ labels.noSpendDays }}</dt>
+                <dd>{{ noSpendDays }}</dd>
+              </div>
+              <div class="stat-row">
+                <dt>{{ labels.avgDailySpend }}</dt>
+                <dd>{{ formatter(avgDaily, currency) }}</dd>
+              </div>
+              <div class="stat-row">
+                <dt>{{ labels.busiestWeekday }}</dt>
+                <dd>{{ busiestWeekday }}</dd>
+              </div>
+            </dl>
+          </article>
+        </TTabPanel>
+        <TTabPanel value="weekday" :active-value="activeTab">
+          <article class="stat-card">
+            <header>
+              <Calendar :size="12" />
+              <h3>{{ labels.byWeekday }}</h3>
+            </header>
+            <div class="weekday-grid">
+              <div v-for="(d, i) in weekBuckets" :key="i" class="weekday-cell">
+                <div class="weekday-bar-vert">
+                  <span class="weekday-bar-fill" :style="{ height: `${(d / weekMax) * 100}%` }" />
+                </div>
+                <span class="weekday-name">{{ dayShortNames[i] }}</span>
+              </div>
             </div>
-          </div>
-        </article>
+          </article>
+        </TTabPanel>
       </aside>
     </div>
   </section>
 </template>
 
 <script setup>
-import { computed } from 'vue';
+import { ref, computed } from 'vue';
 import { Calendar, Flame, BarChart3 } from 'lucide-vue-next';
 import CalendarHeatmap from './CalendarHeatmap.vue';
 import TSectionHeader from './TSectionHeader.vue';
+import TTabList from './TTabList.vue';
+import TTabPanel from './TTabPanel.vue';
 
 const props = defineProps({
   buckets: { type: Array, required: true },
@@ -117,6 +124,13 @@ const props = defineProps({
 });
 
 defineEmits(['select-day']);
+
+const activeTab = ref('top');
+const calTabs = computed(() => [
+  { id: 'top', label: props.labels.topSpendDays },
+  { id: 'glance', label: props.labels.atAGlance },
+  { id: 'weekday', label: props.labels.byWeekday }
+]);
 
 const topDays = computed(() =>
   [...props.buckets]
