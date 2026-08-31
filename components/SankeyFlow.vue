@@ -28,7 +28,7 @@
         @mouseleave="hoveredLinkIdx = -1"
       />
 
-      <g v-for="node in incomeNodes" :key="`in-${node.name}`">
+      <g v-for="(node, idx) in incomeNodes" :key="`in-${node.name}-${idx}`">
         <rect
           :x="node.x"
           :y="node.y"
@@ -59,7 +59,7 @@
         </text>
       </g>
 
-      <g v-for="node in expenseNodes" :key="`out-${node.name}`">
+      <g v-for="(node, idx) in expenseNodes" :key="`out-${node.name}-${idx}`">
         <rect
           :x="node.x"
           :y="node.y"
@@ -96,7 +96,7 @@
 </template>
 
 <script setup>
-import { computed, ref, onMounted } from 'vue';
+import { computed, ref, onMounted, useId } from 'vue';
 
 const props = defineProps({
   flow: { type: Object, required: true },
@@ -114,10 +114,20 @@ const props = defineProps({
 const containerRef = ref(null);
 const hoverNode = ref(null);
 const hoveredLinkIdx = ref(-1);
-const uid = Math.random().toString(36).slice(2, 8);
+const rawUid = useId();
+const uid = String(rawUid).replace(/[^a-zA-Z0-9_-]/g, '-');
 
 const width = 900;
-const height = 460;
+const baseHeight = 460;
+// Dynamic height expands when many categories would overflow fixed viewBox
+const height = computed(() => {
+  const maxNodes = Math.max(
+    (props.flow.sources || []).length,
+    (props.flow.sinks || []).length + (props.flow.savings > 0 ? 1 : 0)
+  );
+  const minNeeded = maxNodes * 8 + Math.max(0, maxNodes - 1) * nodeGap + 40;
+  return Math.max(baseHeight, minNeeded + 20);
+});
 const nodeWidth = 14;
 const nodeGap = 8;
 const leftX = 80;
@@ -126,18 +136,23 @@ const rightX = width - 80 - nodeWidth;
 const layoutNodes = (items, color) => {
   if (!items.length) return [];
   const total = items.reduce((s, i) => s + i.amount, 0) || 1;
-  const usable = height - (items.length - 1) * nodeGap - 40;
+  // Use effective gap that shrinks for large n to avoid negative usable
+  const effectiveGap = items.length > 25 ? 4 : nodeGap;
+  const h = height.value;
+  const usable = Math.max(0, h - (items.length - 1) * effectiveGap - 40);
   let cursor = 20;
   return items.map((item) => {
-    const h = Math.max(8, (item.amount / total) * usable);
+    const raw = (item.amount / total) * usable;
+    const hNode = Math.max(8, raw);
     const node = {
       ...item,
       x: 0,
       y: cursor,
-      height: h,
-      color: item.color || color
+      height: hNode,
+      color: item.color || color,
+      _gap: effectiveGap
     };
-    cursor += h + nodeGap;
+    cursor += hNode + effectiveGap;
     return node;
   });
 };
@@ -171,24 +186,32 @@ const links = computed(() => {
   const totalIn = inNodes.reduce((s, n) => s + n.amount, 0) || 1;
   const totalOut = outNodes.reduce((s, n) => s + n.amount, 0) || 1;
 
-  const inCursors = new Map(inNodes.map((n) => [n.name, n.y]));
-  const outCursors = new Map(outNodes.map((n) => [n.name, n.y]));
+  // Use index-based cursors to avoid collision on duplicate names ("Other")
+  const inCursors = inNodes.map((n) => n.y);
+  const outCursors = outNodes.map((n) => n.y);
+  // Common usable for link thickness so ribbons don't exceed node heights
+  const h = height.value;
+  const effectiveGapIn = inNodes.length > 25 ? 4 : nodeGap;
+  const effectiveGapOut = outNodes.length > 25 ? 4 : nodeGap;
+  const usableIn = Math.max(0, h - (inNodes.length - 1) * effectiveGapIn - 40);
+  const usableOut = Math.max(0, h - (outNodes.length - 1) * effectiveGapOut - 40);
+  const linkUsable = Math.min(usableIn, usableOut) || Math.max(usableIn, usableOut);
 
   const out = [];
-  inNodes.forEach((src) => {
-    outNodes.forEach((dst) => {
+  inNodes.forEach((src, srcIdx) => {
+    outNodes.forEach((dst, dstIdx) => {
       const inShare = src.amount / totalIn; // fraction of in attributed to this source
       const linkAmt = (dst.amount * inShare * totalIn) / totalOut;
       if (linkAmt < 0.5) return;
-      const thickness = Math.max(1, (linkAmt / totalIn) * (height - 40));
+      const thickness = Math.max(1, (linkAmt / totalIn) * linkUsable);
 
-      const srcY = inCursors.get(src.name);
-      const dstY = outCursors.get(dst.name);
+      const srcY = inCursors[srcIdx];
+      const dstY = outCursors[dstIdx];
       const srcHFrac = thickness;
       const dstHFrac = thickness;
 
-      inCursors.set(src.name, srcY + srcHFrac);
-      outCursors.set(dst.name, dstY + dstHFrac);
+      inCursors[srcIdx] = srcY + srcHFrac;
+      outCursors[dstIdx] = dstY + dstHFrac;
 
       const x0 = src.x + nodeWidth;
       const x1 = dst.x;

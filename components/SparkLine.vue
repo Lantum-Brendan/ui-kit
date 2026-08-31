@@ -26,7 +26,7 @@
 </template>
 
 <script setup>
-import { computed } from 'vue';
+import { computed, useId } from 'vue';
 
 const props = defineProps({
   values: { type: Array, required: true }, // numbers oldest -> newest
@@ -35,7 +35,8 @@ const props = defineProps({
   height: { type: Number, default: 36 }
 });
 
-const gradId = computed(() => `spark-grad-${Math.random().toString(36).slice(2, 8)}`);
+const rawId = useId();
+const gradId = `spark-grad-${String(rawId).replace(/[^a-zA-Z0-9_-]/g, '-')}`;
 
 const points = computed(() => {
   if (!props.values?.length) return [];
