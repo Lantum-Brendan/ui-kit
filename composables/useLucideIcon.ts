@@ -1,5 +1,5 @@
 import { computed, isRef, type Ref, type Component } from 'vue';
-import * as LucideIcons from 'lucide-vue-next';
+import { lucideMap } from '../utils/icons';
 
 /**
  * Resolves a Lucide icon component by string name with a fallback option.
@@ -15,6 +15,6 @@ export function useLucideIcon(
   return computed<Component | undefined>(() => {
     const iconName = isRef(name) ? name.value : name;
     if (!iconName) return fallback;
-    return (LucideIcons as Record<string, Component>)[iconName] ?? fallback;
+    return (lucideMap as Record<string, Component>)[iconName] ?? fallback;
   });
 }

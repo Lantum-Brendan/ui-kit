@@ -7,6 +7,8 @@
   "files": [
     "components",
     "assets",
+    "composables",
+    "utils",
     "nuxt.config.ts"
   ],
   "scripts": {
