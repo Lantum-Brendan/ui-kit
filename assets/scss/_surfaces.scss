@@ -1,0 +1,164 @@
+// Tier 0 Primitive #4 — Surface System
+// Migrated from webui/assets/scss/_surfaces.scss
+// Provides .surface variants + display/eyebrow/glass-pill/tone-card — zero JS, only SCSS vars → CSS custom props.
+@use './_vars' as *;
+
+.surface {
+  background: var(--surface-bg);
+  color: var(--surface-ink);
+
+  &--brand {
+    --surface-bg: var(--color-primary-light);
+    --surface-ink: var(--color-text-primary);
+    --surface-accent: var(--color-primary-border);
+    --surface-deep: var(--color-primary);
+  }
+  &--brand-soft {
+    --surface-bg: var(--color-primary-light);
+    --surface-ink: var(--color-text-primary);
+    --surface-accent: var(--color-primary-lighter);
+    --surface-deep: var(--color-primary-hover);
+  }
+  &--income {
+    --surface-bg: var(--color-income-soft);
+    --surface-ink: var(--color-text-primary);
+    --surface-accent: var(--color-income);
+    --surface-deep: var(--color-income);
+  }
+  &--expense {
+    --surface-bg: var(--color-expense-soft);
+    --surface-ink: var(--color-text-primary);
+    --surface-accent: var(--color-expense);
+    --surface-deep: var(--color-expense);
+  }
+  &--neutral {
+    --surface-bg: var(--color-bg-light);
+    --surface-ink: var(--color-text-primary);
+    --surface-accent: var(--color-border-medium);
+    --surface-deep: var(--color-text-secondary);
+  }
+  &--investment {
+    --surface-bg: rgba(14, 165, 233, 0.12);
+    --surface-ink: var(--color-text-primary);
+    --surface-accent: rgba(14, 165, 233, 0.5);
+    --surface-deep: #0284c7;
+  }
+  &--loan {
+    --surface-bg: rgba(217, 119, 6, 0.12);
+    --surface-ink: var(--color-text-primary);
+    --surface-accent: rgba(217, 119, 6, 0.5);
+    --surface-deep: #b45309;
+  }
+  &--gift {
+    --surface-bg: rgba(124, 58, 237, 0.12);
+    --surface-ink: var(--color-text-primary);
+    --surface-accent: rgba(124, 58, 237, 0.5);
+    --surface-deep: #6d28d9;
+  }
+}
+
+// In dark mode the surface bg becomes a subtle tint so it sits on the page
+// instead of dominating it, and the deep token swaps for a brighter accent
+// so icons and text on top of it stay legible.
+:root.dark {
+  .surface--brand {
+    --surface-bg: rgba(var(--color-primary-rgb), 0.16);
+    --surface-accent: var(--color-primary-lighter);
+    --surface-deep: var(--color-primary-border);
+  }
+  .surface--brand-soft {
+    --surface-bg: rgba(var(--color-primary-rgb), 0.1);
+    --surface-accent: var(--color-primary-muted);
+    --surface-deep: var(--color-primary-border);
+  }
+  .surface--income {
+    --surface-bg: rgba(var(--color-income-rgb), 0.14);
+    --surface-accent: var(--color-income);
+    --surface-deep: var(--color-income);
+  }
+  .surface--expense {
+    --surface-bg: rgba(var(--color-expense-rgb), 0.14);
+    --surface-accent: var(--color-expense);
+    --surface-deep: var(--color-expense);
+  }
+  .surface--neutral {
+    --surface-bg: rgba(255, 255, 255, 0.04);
+    --surface-accent: var(--color-border-medium);
+    --surface-deep: var(--color-text-secondary);
+  }
+  .surface--investment {
+    --surface-bg: rgba(14, 165, 233, 0.16);
+    --surface-accent: rgba(56, 189, 248, 0.5);
+    --surface-deep: #38bdf8;
+  }
+  .surface--loan {
+    --surface-bg: rgba(217, 119, 6, 0.16);
+    --surface-accent: rgba(251, 191, 36, 0.5);
+    --surface-deep: #fbbf24;
+  }
+  .surface--gift {
+    --surface-bg: rgba(124, 58, 237, 0.16);
+    --surface-accent: rgba(167, 139, 250, 0.5);
+    --surface-deep: #a78bfa;
+  }
+}
+
+.display-1 {
+  font-weight: $font-bold;
+  font-size: clamp(2rem, 5vw, 3.4rem);
+  line-height: 1.02;
+  letter-spacing: -0.03em;
+}
+.display-2 {
+  font-weight: $font-bold;
+  font-size: clamp(1.6rem, 3.4vw, 2.2rem);
+  line-height: 1.05;
+  letter-spacing: -0.025em;
+}
+.display-3 {
+  font-weight: $font-semibold;
+  font-size: clamp(1.2rem, 2.4vw, 1.6rem);
+  line-height: 1.1;
+  letter-spacing: -0.015em;
+}
+
+.eyebrow {
+  font-size: 11px;
+  font-weight: $font-bold;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: var(--surface-deep, $text-muted);
+}
+
+.glass-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: $spacing-2;
+  padding: 6px 12px;
+  background: var(--glass-bg);
+  border: 1px solid var(--color-border-light);
+  border-radius: 999px;
+  backdrop-filter: blur(10px);
+  box-shadow: var(--elevation-1);
+  font-size: $font-size-sm;
+  font-weight: $font-semibold;
+  color: var(--surface-deep, $text-primary);
+}
+
+.tone-card {
+  position: relative;
+  background: var(--surface-bg, var(--color-bg-white));
+  color: var(--surface-ink, var(--color-text-primary));
+  border: 1px solid var(--color-border-light);
+  border-radius: 18px;
+  padding: 1.25rem;
+  overflow: hidden;
+  box-shadow: var(--elevation-1);
+  transition:
+    box-shadow $duration-base $easing-standard,
+    transform $duration-base $easing-standard;
+
+  &:hover {
+    box-shadow: var(--elevation-2);
+  }
+}
