@@ -18,21 +18,28 @@
     "cypress:open": "cypress open --component"
   },
   "peerDependencies": {
+    "@dicebear/collection": "^9.2.4",
+    "@dicebear/core": "^9.2.4",
     "@heroicons/vue": "^2.2.0",
     "lucide-vue-next": "^0.525.0",
+    "markdown-it": "^14.1.1",
     "nuxt": "^3.12.4",
     "sass": "^1.89.0",
     "vue": "^3.4.0"
   },
   "devDependencies": {
     "@cypress/vite-dev-server": "^5.2.0",
+    "@dicebear/collection": "^9.2.4",
+    "@dicebear/core": "^9.2.4",
     "@heroicons/vue": "^2.2.0",
     "@storybook/addon-essentials": "^8.3.5",
     "@storybook/vue3": "^8.3.5",
     "@storybook/vue3-vite": "^8.3.5",
+    "@types/markdown-it": "^14.1.2",
     "@vitejs/plugin-vue": "^5.1.4",
     "cypress": "^13.15.0",
     "lucide-vue-next": "^0.525.0",
+    "markdown-it": "^14.1.1",
     "sass": "^1.89.0",
     "storybook": "^8.3.5",
     "vite": "^5.4.8",
