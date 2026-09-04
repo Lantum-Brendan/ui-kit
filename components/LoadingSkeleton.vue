@@ -10,13 +10,13 @@
       </div>
     </div>
 
-    <div v-else-if="variant === 'card'" class="skeleton-card">
+    <TCard v-else-if="variant === 'card'" class="skeleton-card">
       <div class="skeleton-header"></div>
       <div class="skeleton-body">
         <div class="skeleton-line"></div>
         <div class="skeleton-line short"></div>
       </div>
-    </div>
+    </TCard>
 
     <div v-else-if="variant === 'table'" class="skeleton-table">
       <div class="skeleton-table-header">
@@ -34,6 +34,8 @@
 </template>
 
 <script setup>
+import TCard from './TCard.vue';
+
 defineProps({
   variant: {
     type: String,

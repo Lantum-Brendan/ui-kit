@@ -1,10 +1,14 @@
 <template>
   <div class="separator">
-    <span class="line" />
+    <TDivider orientation="horizontal" class="divider-line" />
     <span class="text">OR</span>
-    <span class="line" />
+    <TDivider orientation="horizontal" class="divider-line" />
   </div>
 </template>
+
+<script setup>
+import TDivider from '../TDivider.vue';
+</script>
 
 <style lang="scss" scoped>
 @use '../../assets/scss/_vars.scss' as *;
@@ -16,9 +20,8 @@
   margin: 1.5rem 0;
   color: $text-muted;
 
-  .line {
+  .divider-line {
     flex-grow: 1;
-    height: 1px;
     background-color: $border-light;
   }
 

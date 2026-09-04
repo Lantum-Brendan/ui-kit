@@ -9,10 +9,18 @@
     <p class="empty-subtitle">
       {{ subtitle || (pageName ? `Please add at least one ${pageName.toLowerCase()} to be able to view it.` : 'Add an item to get started.') }}
     </p>
-    <button class="add-entity-btn" @click="$emit('create')">
-      <PlusIcon class="button-icon" />
+    <TButton
+      variant="primary"
+      size="medium"
+      :full-width="false"
+      class="add-entity-btn"
+      @click="$emit('create')"
+    >
+      <template #left-icon>
+        <PlusIcon class="button-icon" />
+      </template>
       {{ buttonLabel || (pageName ? `Add ${pageName.toLowerCase()}` : 'Add item') }}
-    </button>
+    </TButton>
   </div>
 </template>
 
@@ -20,6 +28,7 @@
 import { computed } from 'vue';
 import { PlusIcon } from '@heroicons/vue/24/outline';
 import { Package as IconBox } from 'lucide-vue-next';
+import TButton from './TButton.vue';
 
 const props = defineProps({
   pageName: {
@@ -123,29 +132,13 @@ const resolvedIcon = computed(() => props.icon || IconBox);
 }
 
 .add-entity-btn {
-  background: $primary;
-  color: $text-inverse;
-  font-size: 1rem;
-  font-weight: $font-semibold;
-  border: none;
   border-radius: $radius-xl;
-  padding: 0.8rem 1.75rem;
-  cursor: pointer;
-  transition: background $duration-fast $easing-standard;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
 
   .button-icon {
     width: 1.1rem;
     height: 1.1rem;
     flex-shrink: 0;
     stroke-width: 2;
-  }
-
-  &:hover {
-    background: $primary-hover;
   }
 }
 </style>

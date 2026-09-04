@@ -1,10 +1,15 @@
 <template>
   <div class="auth-footer-link">
-    {{ text }} <a :href="to">{{ linkText }}</a>
+    <TDivider orientation="horizontal" class="footer-divider" />
+    <div class="footer-text">
+      {{ text }} <a :href="to">{{ linkText }}</a>
+    </div>
   </div>
 </template>
 
 <script setup>
+import TDivider from './TDivider.vue';
+
 defineProps({
   text: {
     type: String,
@@ -25,12 +30,18 @@ defineProps({
 @use '../assets/scss/_vars.scss' as *;
 
 .auth-footer-link {
-  text-align: center;
-  font-size: $font-size-sm;
   margin-top: $spacing-6;
-  padding-top: $spacing-5;
-  border-top: 1px solid $border-light;
-  color: $text-secondary;
+
+  .footer-divider {
+    background-color: $border-light;
+  }
+
+  .footer-text {
+    text-align: center;
+    font-size: $font-size-sm;
+    padding-top: $spacing-5;
+    color: $text-secondary;
+  }
 
   a {
     color: $primary;
