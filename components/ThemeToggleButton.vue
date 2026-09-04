@@ -1,18 +1,21 @@
 <template>
-  <button
+  <TButton
     type="button"
+    variant="secondary"
+    :full-width="false"
     class="theme-toggle-btn"
     :title="isDark ? titleLight : titleDark"
     @click="toggleTheme"
   >
     <Sun v-if="isDark" class="theme-icon" />
     <Moon v-else class="theme-icon" />
-  </button>
+  </TButton>
 </template>
 
 <script setup>
 import { Sun, Moon } from 'lucide-vue-next';
 import { useTheme } from '../composables/useTheme';
+import TButton from './TButton.vue';
 
 defineProps({
   titleLight: {
@@ -32,17 +35,14 @@ const { isDark, toggleTheme } = useTheme();
 @use '../assets/scss/_vars.scss' as *;
 
 .theme-toggle-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  padding: 0;
   width: 40px;
   height: 40px;
+  min-height: 40px;
   border-radius: 50%;
   border: 1px solid $border-light;
   background: $bg-white;
   color: $text-secondary;
-  cursor: pointer;
-  transition: all 0.2s ease;
 
   &:hover {
     background: $bg-light;
