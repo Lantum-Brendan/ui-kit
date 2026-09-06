@@ -1,11 +1,15 @@
 <template>
-  <img :src="logoPath" :alt="alt" :class="['logo', `logo-${size}`]" @error="handleImageError" />
+  <img :src="src || logoUrl" :alt="alt" :class="['logo', `logo-${size}`]" />
 </template>
 
 <script setup>
-import { ref } from 'vue';
+import defaultLogoUrl from '../assets/logo.svg';
 
 defineProps({
+  src: {
+    type: String,
+    default: null
+  },
   alt: {
     type: String,
     default: 'Trakli Logo'
@@ -17,17 +21,7 @@ defineProps({
   }
 });
 
-const logoPath = ref('/logo.svg');
-
-const handleImageError = (e) => {
-  console.error('Failed to load logo from path:', e.target.src);
-  // Try alternative path if the first one fails
-  if (e.target.src.endsWith('logo.svg')) {
-    logoPath.value = '/_nuxt/logo.svg';
-  } else {
-    console.error('All logo paths failed to load');
-  }
-};
+const logoUrl = defaultLogoUrl;
 </script>
 
 <style lang="scss" scoped>

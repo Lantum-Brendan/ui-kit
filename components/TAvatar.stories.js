@@ -1,4 +1,5 @@
 import TAvatar from './TAvatar.vue';
+import { User, Bell, LifeBuoy } from 'lucide-vue-next';
 
 export default {
   title: 'Primitives/TAvatar',
@@ -19,4 +20,25 @@ export const Default = {
     showName: true,
   },
 };
-export const WithoutDropdown = { args: { imageUrl: 'https://i.pravatar.cc/100?img=2', showDropdown: false } };
+
+export const CustomItems = {
+  args: {
+    imageUrl: 'https://i.pravatar.cc/100?img=3',
+    user: { first_name: 'Alice', last_name: 'Smith', email: 'alice@plugin.org' },
+    userName: 'Alice Smith',
+    showName: true,
+    items: [
+      { id: 'profile', label: 'My Profile', icon: User },
+      { id: 'notifications', label: 'Notification Preferences', icon: Bell },
+      { id: 'support', label: 'Get Support', icon: LifeBuoy },
+      { id: 'exit', label: 'Switch Tenant', danger: true }
+    ]
+  }
+};
+
+export const WithoutDropdown = {
+  args: {
+    imageUrl: 'https://i.pravatar.cc/100?img=2',
+    showDropdown: false
+  }
+};

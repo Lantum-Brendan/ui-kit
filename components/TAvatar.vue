@@ -9,27 +9,45 @@
 
     <Transition v-if="showDropdown" name="dropdown">
       <div v-if="isOpen" class="avatar-dropdown">
-        <div v-if="user" class="dropdown-header">
-          <img :src="imageUrl" alt="User Avatar" class="header-avatar" />
-          <div class="header-info">
-            <p class="header-name">{{ user.first_name }} {{ user.last_name }}</p>
-            <p class="header-email">{{ user.email }}</p>
+        <slot name="header" :user="user" :close="close">
+          <div v-if="user" class="dropdown-header">
+            <img :src="imageUrl" alt="User Avatar" class="header-avatar" />
+            <div class="header-info">
+              <p class="header-name">{{ user.first_name }} {{ user.last_name }}</p>
+              <p class="header-email">{{ user.email }}</p>
+            </div>
           </div>
-        </div>
-        <TDivider v-if="user" orientation="horizontal" />
+        </slot>
+        <TDivider v-if="user || $slots.header" orientation="horizontal" />
         <div class="menu-list">
-          <TDropdownItem class="avatar-menu-item" @click="onSettings">
-            <Settings class="menu-icon" />
-            <span>{{ settingsLabel }}</span>
-          </TDropdownItem>
-          <TDropdownItem v-if="user?.is_admin" class="avatar-menu-item" @click="onAdmin">
-            <ShieldCheck class="menu-icon" />
-            <span>{{ adminLabel }}</span>
-          </TDropdownItem>
-          <TDropdownItem class="avatar-menu-item avatar-menu-item--danger" @click="onLogout">
-            <LogOut class="menu-icon" />
-            <span>{{ logoutLabel }}</span>
-          </TDropdownItem>
+          <slot name="menu" :user="user" :close="close">
+            <template v-if="items && items.length">
+              <TDropdownItem
+                v-for="item in items"
+                :key="item.id || item.label"
+                class="avatar-menu-item"
+                :class="{ 'avatar-menu-item--danger': item.danger }"
+                @click="onCustomItemClick(item)"
+              >
+                <component :is="item.icon" v-if="item.icon" class="menu-icon" />
+                <span>{{ item.label }}</span>
+              </TDropdownItem>
+            </template>
+            <template v-else>
+              <TDropdownItem class="avatar-menu-item" @click="onSettings">
+                <Settings class="menu-icon" />
+                <span>{{ settingsLabel }}</span>
+              </TDropdownItem>
+              <TDropdownItem v-if="user?.is_admin" class="avatar-menu-item" @click="onAdmin">
+                <ShieldCheck class="menu-icon" />
+                <span>{{ adminLabel }}</span>
+              </TDropdownItem>
+              <TDropdownItem class="avatar-menu-item avatar-menu-item--danger" @click="onLogout">
+                <LogOut class="menu-icon" />
+                <span>{{ logoutLabel }}</span>
+              </TDropdownItem>
+            </template>
+          </slot>
         </div>
       </div>
     </Transition>
@@ -78,10 +96,14 @@ const props = defineProps({
   logoutLabel: {
     type: String,
     default: 'Logout'
+  },
+  items: {
+    type: Array,
+    default: null
   }
 });
 
-const emit = defineEmits(['settings', 'admin', 'logout']);
+const emit = defineEmits(['settings', 'admin', 'logout', 'select']);
 
 const { isOpen, rootRef, toggle, close } = useDropdown();
 
@@ -98,6 +120,14 @@ const onAdmin = () => {
 const onLogout = () => {
   close();
   emit('logout');
+};
+
+const onCustomItemClick = (item) => {
+  close();
+  if (item.action) {
+    item.action();
+  }
+  emit('select', item);
 };
 </script>
 

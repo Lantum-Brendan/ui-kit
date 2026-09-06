@@ -1,26 +1,31 @@
 <template>
   <div class="empty-state">
     <div class="empty-art">
-      <component :is="resolvedIcon" class="empty-illustration" />
+      <slot name="icon">
+        <component :is="resolvedIcon" class="empty-illustration" />
+      </slot>
     </div>
     <h2 class="empty-title">
-      {{ title || (pageName ? `You don't have any ${pageName.toLowerCase()} at the moment.` : 'No items yet.') }}
+      <slot name="title">{{ title }}</slot>
     </h2>
-    <p class="empty-subtitle">
-      {{ subtitle || (pageName ? `Please add at least one ${pageName.toLowerCase()} to be able to view it.` : 'Add an item to get started.') }}
+    <p v-if="description || $slots.description" class="empty-subtitle">
+      <slot name="description">{{ description }}</slot>
     </p>
-    <TButton
-      variant="primary"
-      size="medium"
-      :full-width="false"
-      class="add-entity-btn"
-      @click="$emit('create')"
-    >
-      <template #left-icon>
-        <PlusIcon class="button-icon" />
-      </template>
-      {{ buttonLabel || (pageName ? `Add ${pageName.toLowerCase()}` : 'Add item') }}
-    </TButton>
+    <slot name="actions">
+      <TButton
+        v-if="actionLabel"
+        variant="primary"
+        size="medium"
+        :full-width="false"
+        class="add-entity-btn"
+        @click="$emit('create')"
+      >
+        <template #left-icon>
+          <PlusIcon class="button-icon" />
+        </template>
+        {{ actionLabel }}
+      </TButton>
+    </slot>
   </div>
 </template>
 
@@ -31,23 +36,18 @@ import { Package as IconBox } from 'lucide-vue-next';
 import TButton from './TButton.vue';
 
 const props = defineProps({
-  pageName: {
-    type: String,
-    default: ''
-  },
   title: {
     type: String,
-    default: ''
+    default: 'No items yet'
   },
-  subtitle: {
+  description: {
     type: String,
     default: ''
   },
-  buttonLabel: {
+  actionLabel: {
     type: String,
     default: ''
   },
-  // A (Lucide/Heroicons or any) icon component to theme the empty state for its content.
   icon: {
     type: [Object, Function],
     default: null

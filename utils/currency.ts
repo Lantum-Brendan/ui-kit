@@ -1,7 +1,5 @@
 /**
- * Centralized Currency Utility
- * Migrated from webui/utils/currency.ts — Tier 0 primitive (#8)
- * Provides locale-aware parsing and formatting for currency amounts
+ * Locale-aware parsing and formatting for currency amounts.
  * Zero domain deps; Intl.NumberFormat only.
  */
 

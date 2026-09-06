@@ -36,9 +36,8 @@ const persistCollapseState = () => {
 };
 
 /**
- * Sidebar state — Tier 0 primitive (layout chrome, no domain deps)
- * Migrated from webui/composables/useSidebar.js
- * Note: .js → .ts for ui-kit; behavior identical, persisted collapse + viewport listeners.
+ * Manages sidebar open/collapsed state, persisting collapse preference to
+ * localStorage and adapting to viewport breakpoints.
  */
 export const useSidebar = () => {
   const checkMobile = () => {

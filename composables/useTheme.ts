@@ -31,9 +31,9 @@ function resolveTheme(mode: ThemeMode): boolean {
 }
 
 /**
- * Headless theme state machine — Tier 0 primitive (#10)
- * Migrated from webui/composables/useTheme.ts
- * Manages light/dark/system, persists to localStorage, toggles `document.documentElement.dark` (drives tokens.css).
+ * Headless theme state machine. Manages light/dark/system preference,
+ * persists to localStorage, and toggles `document.documentElement.dark`
+ * to drive tokens.css dark-mode overrides.
  */
 export function useTheme() {
   function setTheme(newTheme: ThemeMode) {

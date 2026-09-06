@@ -1,19 +1,23 @@
 <template>
   <div class="search-container">
-    <LucideSearch class="search-icon" />
-    <input
-      v-model="internalValue"
-      type="text"
-      class="search-input"
+    <TInput
+      :model-value="internalValue"
       :placeholder="placeholder"
-      @input="handleInput"
-    />
+      size="small"
+      class="search-input-field"
+      @update:model-value="handleInput"
+    >
+      <template #prefix>
+        <LucideSearch class="search-icon" />
+      </template>
+    </TInput>
   </div>
 </template>
 
 <script setup>
 import { ref, watch } from 'vue';
 import { Search as LucideSearch } from 'lucide-vue-next';
+import TInput from './TInput.vue';
 
 const props = defineProps({
   modelValue: {
@@ -42,10 +46,11 @@ watch(
   }
 );
 
-const handleInput = () => {
+const handleInput = (val) => {
+  internalValue.value = val;
   clearTimeout(debounceTimeout);
   debounceTimeout = setTimeout(() => {
-    emit('update:modelValue', internalValue.value);
+    emit('update:modelValue', val);
   }, props.debounce);
 };
 </script>
@@ -60,38 +65,24 @@ const handleInput = () => {
 }
 
 .search-icon {
-  position: absolute;
-  left: 8px;
   color: $text-muted;
   width: 14px;
   height: 14px;
   pointer-events: none;
 }
 
-.search-input {
+.search-input-field {
   width: 160px;
-  padding: 6px 10px 6px 28px;
-  border: 1px solid $border-light;
-  border-radius: $radius-md;
-  font-size: $font-size-xs;
-  background: $bg-white;
-  color: $text-primary;
-  transition: all 0.2s ease;
+  transition: width 0.2s ease, border-color 0.2s ease;
 
-  &:focus {
-    outline: none;
-    border-color: $primary;
+  &:focus-within {
     width: 200px;
-  }
-
-  &::placeholder {
-    color: $text-muted;
   }
 
   @media (max-width: $breakpoint-sm) {
     width: 100%;
 
-    &:focus {
+    &:focus-within {
       width: 100%;
     }
   }

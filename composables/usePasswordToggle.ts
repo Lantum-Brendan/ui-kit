@@ -1,9 +1,7 @@
 import { ref } from 'vue';
 
 /**
- * Password visibility toggle — Tier 0 primitive
- * Migrated from webui/composables/usePasswordToggle.js
- * .js → .ts for ui-kit; behavior identical.
+ * Manages password field visibility toggling.
  */
 export const usePasswordToggle = () => {
   const showPassword = ref(false);
